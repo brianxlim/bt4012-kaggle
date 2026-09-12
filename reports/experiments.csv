@@ -1,0 +1,2 @@
+run_at,name,auc_days_16-29,auc_days_19-32,auc_days_22-35,worst_day_days_16-29,worst_day_days_19-32,worst_day_days_22-35,notes,lb_public
+2026-09-12T17:31:45,baseline_xgb,0.899170972436207,0.8861708806283104,0.8758625205259272,0.6214852250858797,0.7020808978255787,0.694465926871819,"{""rounds"": 193, ""fold_rounds"": {""days 16-29"": 99, ""days 19-32"": 151, ""days 22-35"": 121}, ""features"": ""raw 165""}",0.93902
