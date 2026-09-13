@@ -1,2 +1,4 @@
-run_at,name,auc_days_16-29,auc_days_19-32,auc_days_22-35,worst_day_days_16-29,worst_day_days_19-32,worst_day_days_22-35,notes,lb_public
-2026-09-12T17:31:45,baseline_xgb,0.899170972436207,0.8861708806283104,0.8758625205259272,0.6214852250858797,0.7020808978255787,0.694465926871819,"{""rounds"": 193, ""fold_rounds"": {""days 16-29"": 99, ""days 19-32"": 151, ""days 22-35"": 121}, ""features"": ""raw 165""}",0.93902
+run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
+2026-09-12T17:31:45,baseline_xgb,0.87586,,0.69447,165,193,0.93902,"{""seeds"": [42], ""note"": ""single seed, superseded by seed averaging""}"
+2026-09-12T18:18:00,raw165_seedavg,0.8917,0.00262,0.6586,165,235,0.94201,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.8957, ""days 19-32"": 0.8873, ""days 22-35"": 0.892}}"
+2026-09-12T18:37:00,tuned_d10cs05lr01,0.90304,0.0034,0.71775,165,97,0.94812,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9193, ""days 19-32"": 0.8913, ""days 22-35"": 0.8985}}"
