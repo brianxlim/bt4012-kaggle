@@ -109,3 +109,54 @@ def decay_profile(results: dict[str, dict]) -> pd.DataFrame:
         .reset_index()
         .rename(columns={"mean": "mean_auc", "min": "worst_auc", "count": "folds"})
     )
+
+
+def distribution_shift(train_frame, test_frame, columns, threshold=0.5):
+    """Flag features that do not mean the same thing in train and test.
+
+    RUN THIS ON EVERY ENGINEERED FEATURE BEFORE SUBMITTING.
+
+    train.csv holds every node for days 1-35; test.csv holds only the labelled
+    nodes for days 36-49, because the 46,668 unlabelled test-day transactions
+    appear in the edge list but have no feature row. Any feature counting a
+    transaction's neighbours therefore means something different on each side,
+    and a fold-based check cannot see it: all folds live inside days 1-35 where
+    the difference does not exist.
+
+    A feature that is constant in training carries no signal the model can
+    learn, and if it is non-constant at test time the model meets values it has
+    never seen. That is worse than useless.
+
+    Returns one row per feature, worst offenders first.
+    """
+    rows = []
+    for column in columns:
+        a = float(train_frame[column].mean())
+        b = float(test_frame[column].mean())
+        sd = float(train_frame[column].std())
+        rows.append(
+            {
+                "feature": column,
+                "train_mean": a,
+                "test_mean": b,
+                "train_sd": sd,
+                # how far the test mean sits from the training distribution
+                "shift_in_sds": abs(b - a) / sd if sd > 1e-9 else np.inf,
+                "constant_in_train": sd < 1e-9,
+            }
+        )
+    frame = pd.DataFrame(rows).sort_values("shift_in_sds", ascending=False)
+    frame["suspect"] = frame["constant_in_train"] | (frame["shift_in_sds"] > threshold)
+    return frame.reset_index(drop=True)
+
+
+def assert_no_shift(train_frame, test_frame, columns, threshold=0.5):
+    """Raise if any feature would reach a submission with a train/test mismatch."""
+    report = distribution_shift(train_frame, test_frame, columns, threshold)
+    bad = report[report["suspect"]]
+    if not bad.empty:
+        raise ValueError(
+            f"{len(bad)} feature(s) differ between train and test:\n"
+            + bad.head(10).to_string(index=False)
+        )
+    return report
