@@ -3,8 +3,8 @@
 BT4012 Kaggle competition `bt-4012-competition-2026` — detecting illicit Bitcoin
 transactions in the Elliptic dataset, scored by ROC AUC.
 
-**Standing: 1st place, public score 0.95333.** Seven submissions.
-Last updated 2026-09-14.
+**Standing: 1st place, public score 0.95521.** Eight submissions.
+Last updated 2026-09-17.
 
 ---
 
@@ -12,9 +12,9 @@ Last updated 2026-09-14.
 
 | | Public score |
 |---|---|
-| **This model** | **0.95333** |
-| 2nd place | 0.94938 |
-| 3rd place | 0.94890 |
+| **This model** | **0.95521** |
+| 2nd place | 0.95357 |
+| 3rd place | 0.95085 |
 | Organisers' baseline | 0.92119 |
 
 The final model is gradient-boosted decision trees (XGBoost) on the 165 supplied
@@ -23,12 +23,14 @@ features, labelled rows only, five random seeds rank-averaged.
 
 | Setting | Value |
 |---|---|
-| `max_depth` | 10 |
-| `colsample_bytree` | 0.5 |
+| `max_depth` | 12 |
+| `colsample_bytree` | 0.7 |
+| `subsample` | 1.0 |
 | `learning_rate` | 0.1 |
 | `scale_pos_weight` | 7.57 |
 | `min_child_weight` | 8 |
-| trees | 68 |
+| `gamma` | 0.2 |
+| trees | 79 |
 | seeds | 5, rank-averaged |
 
 No feature engineering, no external data, no graph features, no use of the
@@ -46,10 +48,15 @@ No feature engineering, no external data, no graph features, no use of the
 | 4 | + 22 graph features, 72 neighbourhood only | 0.9465 | 0.89413 | **−0.0540** |
 | 5 | Dropped 21 distribution-shifted features | 0.9109 | 0.93984 | **−0.0083** |
 | 6 | Half neural net, half XGBoost | 0.9277 | 0.94800 | −0.0001 |
-| 7 | + `scale_pos_weight` 7.57, `min_child_weight` 8 | 0.9101 | **0.95333** | **+0.0052** |
+| 7 | + `scale_pos_weight` 7.57, `min_child_weight` 8 | 0.9101 | 0.95333 | **+0.0052** |
+| 8 | + tree-shape ridge: d12, cs 0.7, sub 1.0, gamma 0.2 | 0.9215 | **0.95521** | **+0.0019** |
 
-Three of the seven improved the score. All three were changes to model
-*settings*. Every change to the feature set or the model family failed.
+Four of the eight improved the score. All four were changes to model *settings*.
+Every change to the feature set or the model family failed.
+
+The transfer ratio is shrinking as the model gets stronger: +0.0114→+0.0061,
++0.0090→+0.0052, +0.0115→+0.0019. Offline settings gains are still directionally
+reliable but worth progressively less.
 
 ---
 
@@ -284,17 +291,114 @@ the time. Only offline settings gains above ~0.005 justify a submission.
 
 ---
 
+## 10. Branch `model/settings-sweep-v2` — further iteration
+
+Not submitted. Recorded here so none of it is repeated.
+
+### 10.1 What worked: a settings ridge, +0.0115 offline → +0.0019 on the board
+
+A 24-configuration random search over whole combinations, rather than one axis
+at a time. Only 3 of 24 beat the current model, none by more than 0.0025 — but
+all three shared `subsample=1.0`, `colsample_bytree=0.7`, `reg_lambda=1.0`. That
+ridge was then tested directly rather than taking the single best sample.
+
+| Config | Seeds 0–9 | Seeds 10–19 (unseen by the search) |
+|---|---|---|
+| **d12, cs 0.7, sub 1.0, mcw 8, gamma 0.2** | **+0.0110** (p=0.0001) | **+0.0115** (p<0.0001) |
+| d10, cs 0.7, sub 1.0, mcw 8 | +0.0086 | +0.0079 |
+| d10, cs 0.7, sub 1.0, mcw 5, gamma 0.2 | +0.0059 | — |
+| d12, cs 0.7, sub 1.0, mcw 5, gamma 0.2 | +0.0040 | — |
+
+**49 wins in 60 paired fold-and-seed comparisons.** Crucially there is no
+shrinkage between the two seed halves. The earlier `spw + mcw` result fell from
++0.0112 to +0.0062 on re-measurement, which is what best-of-fifteen selection
+looks like. This one held, which is the main reason to believe it.
+
+Code in `src/model_ridge.py`, search in `src/tune_v2.py`, all 24 results in
+`reports/tuning_v2.csv`.
+
+### 10.2 Seed count: no evidence for widening it
+
+Rank-average of the ridge model over 1 to 20 seeds, on the standard folds:
+
+| Seeds | 1 | 2 | 5 | 10 | 20 |
+|---|---|---|---|---|---|
+| Mean AUC | 0.9231 | 0.9236 | 0.9218 | 0.9222 | 0.9226 |
+
+Flat to within 0.0018. No offline case for going past 5. Note the harness also
+measured seed averaging at +0.0000 when it delivered +0.0030 on the leaderboard,
+so read this as "cannot see a difference" rather than "there is none".
+
+### 10.3 What failed
+
+**Training objective and evaluation metric** — every variant lost ground against
+the ridge model's 0.9208:
+
+| Variant | Offline | Δ |
+|---|---|---|
+| `binary:logistic` / `auc` (current) | 0.9208 | — |
+| `eval_metric=aucpr` | 0.9173 | −0.0035 |
+| `max_delta_step=1` | 0.9046 | −0.0161 |
+| `eval_metric=logloss` | 0.9011 | −0.0196 |
+| `objective=rank:pairwise` | ~0.749 | **−0.17** |
+
+The ranking objective is worth a note. AUC scores ordering, so training directly
+on ordering looks like the obviously right move, and it is dramatically worse.
+It also needs `XGBRanker` with explicit groups — driven through `XGBClassifier`
+it silently returns constant predictions and a flat 0.5000.
+
+**Averaging different configurations instead of different seeds.** The reasoning
+was that five seeds of one config all make the same kind of mistake, whereas
+five different configs make different mistakes:
+
+| Ensemble | Offline |
+|---|---|
+| Ridge alone, 5 seeds | **0.9218** |
+| 3 configs × 5 seeds = 15 models | 0.9200 |
+| 5 configs × 5 seeds = 25 models | 0.9184 |
+
+Worse, and monotonically so. The other configs are genuinely weaker, and
+averaging drags the best one down toward them. Diversity does not pay when it is
+bought with quality.
+
+**CatBoost**, a third boosting library whose "ordered boosting" is designed to
+reduce exactly the quiet overfitting boosting is prone to:
+
+| Depth | 4 | 5 | 6 | 8 |
+|---|---|---|---|---|
+| Offline AUC | **0.9054** | 0.8963 | 0.8905 | 0.8653 |
+
+Best at depth 4 and still 0.015 behind XGBoost.
+
+### 10.4 The model-family tally is now seven
+
+XGBoost beats LightGBM, CatBoost, scikit-learn's hist-boost, random forest,
+extra trees, logistic regression and a tuned neural net. The neural net is the
+only one that beat it offline, and it went flat on the leaderboard.
+
+**Stop testing model families.** Seven have been tried, the search space is
+exhausted, and the one that looked best offline is the one that cost a
+submission to disprove.
+
+---
+
 ## 9. Where this could still go
 
 Remaining directions, all in the only category that has transferred:
 
-- **Widen the seed average** from 5 to 20. Pure variance reduction, and the one
-  change that has never backfired.
-- **Sweep `subsample`, `reg_lambda` and `gamma` in combination** with the
-  current settings. Never explored together, and every gain in this project has
-  come from combinations rather than single settings.
+Both directions listed here have now been run — see §10. The settings sweep
+found a real ridge worth **+0.0115** offline, which on the halving rule projects
+to roughly **+0.006** on the leaderboard. Widening the seed average found
+nothing.
 
-Realistic remaining headroom is roughly +0.005 to +0.010. The top of the
+That candidate was submitted on 2026-09-17 and scored **0.95521**, +0.0019. It
+is now the model of record. The projection was +0.006, so the forecast was three
+times the delivered gain.
+
+Beyond it the settings space around the current model has been searched twice,
+seven model families have been tested and beaten, and the remaining headroom
+looks thin. Second place moved from 0.94890 to 0.95357 over the same period, so
+the field is closing. The top of the
 leaderboard spans 0.0022, so that is enough to matter, but it is tuning rather
 than a breakthrough.
 
