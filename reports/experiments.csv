@@ -5,3 +5,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-09-14,spw757_mcw8,0.9101,0.0024,,165,68,0.95333,"scale_pos_weight 7.57 + min_child_weight 8 on the tuned settings; 3 folds x 10 seeds, 3/3 folds up, p=0.005"
 2026-09-17,ridge_d12cs07sub10g02,0.9215,0.0014,,165,79,0.95521,"settings ridge from the v2 random search: depth 12, colsample 0.7, subsample 1.0, gamma 0.2; +0.0110 seeds 0-9 and +0.0115 seeds 10-19, 49/60 paired wins"
 2026-09-26T04:58:08,driftrank75,0.92426,0.00166,0.77891,165,79,0.94921,"{""drift_threshold"": 0.75, ""drifting"": [""feat_2"", ""feat_3"", ""feat_100"", ""feat_101"", ""feat_103"", ""feat_106"", ""feat_107"", ""feat_109"", ""feat_112"", ""feat_113"", ""feat_115"", ""feat_136"", ""feat_137"", ""feat_139"", ""feat_143"", ""feat_145"", ""feat_151""]}"
+2026-09-26T05:25:18,balance_spw24_mcw16,0.9226,0.0023,0.75527,165,81,0.95475,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9215, ""days 19-32"": 0.9213, ""days 22-35"": 0.925}}"
+2026-09-26T05:28:43,recent_d23,,,,165,79,0.95353,"EXPERIMENT: model of record trained on days 23-35 only (9,942 rows); spearman 0.896 vs ridge on test"

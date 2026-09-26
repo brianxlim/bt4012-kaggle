@@ -50,6 +50,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 6 | Half neural net, half XGBoost | 0.9277 | 0.94800 | −0.0001 |
 | 7 | + `scale_pos_weight` 7.57, `min_child_weight` 8 | 0.9101 | 0.95333 | **+0.0052** |
 | 8 | + tree-shape ridge: d12, cs 0.7, sub 1.0, gamma 0.2 | 0.9215 | **0.95521** | **+0.0019** |
+| 9 | Ridge + 17 drifting features replaced by within-day ranks | 0.9243 | 0.94921 | **−0.0060** |
+| 10 | Ridge + heavier balance: spw 24, mcw 16 | 0.9226 | 0.95475 | −0.0005 |
+| 11 | EXPERIMENT: ridge trained on days 23–35 only | — | 0.95353 | −0.0017 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -405,3 +408,35 @@ than a breakthrough.
 Anything touching the feature set or the model family has a 0-for-3 record and
 no offline measurement can screen it first. Such a change is a submission spent
 to buy information, and should be described that way.
+
+---
+
+## 11. 2026-09-26 — three submissions, none improved
+
+Standing at the start: 4th, 0.95521 against a leader at 0.95741.
+
+**Drifting features as within-day ranks (0.94921, −0.0060).** 17 features whose
+value alone separates train from test at AUC > 0.75 were replaced by their
+percentile rank among the same day's labelled rows. Offline this was the most
+convincing feature result so far: +0.0085 (seeds 5–14), +0.0118 (seeds 15–24,
+27/30 wins), a plateau over thresholds 0.65–0.80, and positive even on the
+saturated post-cliff windows (+0.0004, 9/10 wins). The leaderboard inverted it
+anyway. Likely cause: pooled AUC ranks across days, and ranking within a day
+throws away the between-day level differences that the raw values carry.
+Feature-set changes are now **0 for 3**.
+
+**Heavier class balance, spw 24 + mcw 16 (0.95475, −0.0005).** A 3×3 grid of
+spw {12,16,24} × mcw {12,16,24} was positive in every cell; the top cell
+replicated without shrinkage (+0.0073 → +0.0071 on unseen seeds). It landed flat.
+This is the first settings change to not transfer. Five xgboost variants now sit
+in 0.9547–0.9552 on the public board: the settings direction looks exhausted.
+
+**Days 23–35 only (0.95353, −0.0017).** An experiment. It uses a third of the
+rows and still comes within 0.0017 — while ranking the test rows differently from
+the full model (Spearman 0.896). Two near-equal, different models are the one
+blending setup not yet tried here; earlier blends paired a strong model with a
+weaker or near-identical one.
+
+Also measured, not submitted: labelled-neighbour counts (a node counts as
+labelled if it has a label in train or a row in test.csv — symmetric by
+construction). +0.0025 on seeds 0–4, +0.0004 on seeds 5–14. Noise.
