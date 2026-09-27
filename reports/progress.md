@@ -53,6 +53,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 9 | Ridge + 17 drifting features replaced by within-day ranks | 0.9243 | 0.94921 | **−0.0060** |
 | 10 | Ridge + heavier balance: spw 24, mcw 16 | 0.9226 | 0.95475 | −0.0005 |
 | 11 | EXPERIMENT: ridge trained on days 23–35 only | — | 0.95353 | −0.0017 |
+| 12 | **50/50 rank-average: ridge + days-23–35 model** | — | **0.95629** | **+0.0011** |
+| 13 | Equal average of models from start days 1, 12, 18, 23, 28 | — | 0.95396 | −0.0013 |
+| 14 | 50/50 rank-average: ridge + days-18–35 model | — | 0.95612 | +0.0009 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -440,3 +443,23 @@ weaker or near-identical one.
 Also measured, not submitted: labelled-neighbour counts (a node counts as
 labelled if it has a label in train or a row in test.csv — symmetric by
 construction). +0.0025 on seeds 0–4, +0.0004 on seeds 5–14. Noise.
+
+---
+
+## 12. 2026-09-27 — window blending, first blend to gain
+
+A new leader appeared overnight at 0.96362 (+0.006 over the previous top).
+Checked for a leak first: transaction id (AUC 0.56, 0.50 post-cliff) and
+within-day row position (0.55) carry at most weak signal. Not the explanation.
+
+| Blend | Leaderboard |
+|---|---|
+| ridge 50 / days-23–35 50 | **0.95629** (best) |
+| ridge 50 / days-18–35 50 | 0.95612 |
+| five windows equal (1, 12, 18, 23, 28) | 0.95396 |
+
+Two different recent windows each add ~+0.001 when paired 50/50 with the full
+model, so it is probably real rather than sampling luck. It fails when the full
+model is diluted to 20% and a 6,312-row window (days 28–35, Spearman 0.80 with
+the full model) joins. Models: `src/model_recent.py`, `src/model_windows.py`;
+blending: `src/blend.py`.

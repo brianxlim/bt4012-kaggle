@@ -7,3 +7,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-09-26T04:58:08,driftrank75,0.92426,0.00166,0.77891,165,79,0.94921,"{""drift_threshold"": 0.75, ""drifting"": [""feat_2"", ""feat_3"", ""feat_100"", ""feat_101"", ""feat_103"", ""feat_106"", ""feat_107"", ""feat_109"", ""feat_112"", ""feat_113"", ""feat_115"", ""feat_136"", ""feat_137"", ""feat_139"", ""feat_143"", ""feat_145"", ""feat_151""]}"
 2026-09-26T05:25:18,balance_spw24_mcw16,0.9226,0.0023,0.75527,165,81,0.95475,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9215, ""days 19-32"": 0.9213, ""days 22-35"": 0.925}}"
 2026-09-26T05:28:43,recent_d23,,,,165,79,0.95353,"EXPERIMENT: model of record trained on days 23-35 only (9,942 rows); spearman 0.896 vs ridge on test"
+2026-09-27T00:16:13,blend_full_recent50,,,,165,79,0.95629,50/50 rank-average ridge (days 1-35) + recent_d23 (days 23-35)
+2026-09-27T00:16:13,windows_1_12_18_23_28,,,,165,79,0.95396,"equal rank-average of ridge settings trained from days 1,12,18,23,28"
+2026-09-27T00:16:13,blend_full_from18_50,,,,165,79,0.95612,50/50 rank-average ridge + window_from18 (days 18-35)
