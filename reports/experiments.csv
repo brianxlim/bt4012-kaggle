@@ -10,3 +10,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-09-27T00:16:13,blend_full_recent50,,,,165,79,0.95629,50/50 rank-average ridge (days 1-35) + recent_d23 (days 23-35)
 2026-09-27T00:16:13,windows_1_12_18_23_28,,,,165,79,0.95396,"equal rank-average of ridge settings trained from days 1,12,18,23,28"
 2026-09-27T00:16:13,blend_full_from18_50,,,,165,79,0.95612,50/50 rank-average ridge + window_from18 (days 18-35)
+2026-09-28T00:16:05,blend3_full50_d23_d18,,,,165,79,0.95646,rank-average ridge .5 + recent_d23 .25 + window_from18 .25
+2026-09-28T00:16:05,blend3_20seed,,,,165,79,0.95531,"same 3-way blend, 20 seeds per model; spearman 0.998 with the 5-seed file"

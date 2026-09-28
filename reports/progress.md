@@ -56,6 +56,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 12 | **50/50 rank-average: ridge + days-23–35 model** | — | **0.95629** | **+0.0011** |
 | 13 | Equal average of models from start days 1, 12, 18, 23, 28 | — | 0.95396 | −0.0013 |
 | 14 | 50/50 rank-average: ridge + days-18–35 model | — | 0.95612 | +0.0009 |
+| 15 | **Ridge .5 + days-23 .25 + days-18 .25** | — | **0.95646** | +0.0002 |
+| 16 | Same blend, 20 seeds per model | — | 0.95531 | −0.0012 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -463,3 +465,18 @@ model, so it is probably real rather than sampling luck. It fails when the full
 model is diluted to 20% and a 6,312-row window (days 28–35, Spearman 0.80 with
 the full model) joins. Models: `src/model_recent.py`, `src/model_windows.py`;
 blending: `src/blend.py`.
+
+---
+
+## 13. 2026-09-28 — the leaderboard's noise floor, measured directly
+
+The 3-way blend scored 0.95646. The same blend with 20 seeds per model instead
+of 5 scored 0.95531, although the two files agree at Spearman **0.998**. So two
+near-identical submissions differ by **0.0012** on the public board. That is as
+large as every blend gain recorded since 2026-09-27 (+0.0009 to +0.0013). Those
+gains cannot be told apart from sampling noise, and choosing between them on the
+public score only fits the 30% public sample.
+
+A local-features-only model (93 features) was checked as a blend partner
+offline. The blend lost on four of five windows (up to −0.008 pre-cliff), gained
++0.0005 on one. Not submitted; the third slot was left unused.
