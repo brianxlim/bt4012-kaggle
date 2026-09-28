@@ -55,11 +55,11 @@ def normalised_adjacency(src, dst, n):
     deg = np.bincount(src, minlength=n).astype("float32")
     values = 1.0 / deg[src]
     index = torch.tensor(np.stack([src, dst]), dtype=torch.long)
-    return torch.sparse_coo_tensor(index, torch.tensor(values), (n, n)).coalesce()
+    return torch.sparse_coo_tensor(index, torch.tensor(values), (n, n), check_invariants=False).coalesce().to_sparse_csr()
 
 
 class GNN(nn.Module):
-    def __init__(self, n_in, hidden=128, layers=2, dropout=0.3):
+    def __init__(self, n_in, hidden=64, layers=2, dropout=0.3):
         super().__init__()
         self.encode = nn.Sequential(nn.Linear(n_in, hidden), nn.ReLU(), nn.Dropout(dropout))
         self.layers = nn.ModuleList(
@@ -83,8 +83,28 @@ class GNN(nn.Module):
 class GraphData:
     """Everything a fit needs, built once."""
 
-    def __init__(self):
+    def __init__(self, days=None):
+        """days: keep only nodes on these days. No edge crosses a day, so a subset
+        of days is an exact subgraph and makes each epoch proportionally cheaper."""
         frame, feats, (src, dst) = build_graph()
+        if days is not None:
+            # a bare node (no feature row) takes its day from its neighbours
+            day = frame["day"].to_numpy().copy()
+            for _ in range(3):
+                missing = day == 0
+                if not missing.any():
+                    break
+                fill = np.zeros(len(day))
+                np.maximum.at(fill, src, day[dst])
+                np.maximum.at(fill, dst, day[src])
+                day[missing] = fill[missing]
+            frame["day"] = day
+            keep = np.isin(day, list(days))
+            new_id = np.full(len(frame), -1)
+            new_id[keep] = np.arange(keep.sum())
+            ok = keep[src] & keep[dst]
+            src, dst = new_id[src[ok]], new_id[dst[ok]]
+            frame = frame[keep]
         self.frame, self.n = frame, len(frame)
         self.a_out = normalised_adjacency(src, dst, self.n)
         self.a_in = normalised_adjacency(dst, src, self.n)
@@ -108,7 +128,7 @@ class GraphData:
         return torch.tensor(np.hstack([x, self.has[:, None].astype("float32"), self.degree]))
 
 
-def fit_predict(data, train_mask, epochs=200, seed=0, hidden=128, layers=2, dropout=0.3,
+def fit_predict(data, train_mask, epochs=200, seed=0, hidden=64, layers=2, dropout=0.3,
                 lr=3e-3, weight_decay=1e-4, pos_weight=7.57, eval_mask=None, eval_every=0):
     """Train full-batch on train_mask nodes; return scores for every node."""
     torch.manual_seed(seed)
