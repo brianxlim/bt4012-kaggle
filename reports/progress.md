@@ -58,6 +58,7 @@ No feature engineering, no external data, no graph features, no use of the
 | 14 | 50/50 rank-average: ridge + days-18–35 model | — | 0.95612 | +0.0009 |
 | 15 | **Ridge .5 + days-23 .25 + days-18 .25** | — | **0.95646** | +0.0002 |
 | 16 | Same blend, 20 seeds per model | — | 0.95531 | −0.0012 |
+| 17 | Best blend 0.8 + graph neural net 0.2 | — | 0.95547 | −0.0010 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -480,3 +481,32 @@ public score only fits the 30% public sample.
 A local-features-only model (93 features) was checked as a blend partner
 offline. The blend lost on four of five windows (up to −0.008 pre-cliff), gained
 +0.0005 on one. Not submitted; the third slot was left unused.
+
+---
+
+## 14. Graph neural network (`src/gnn.py`, `src/model_gnn.py`)
+
+Two layers of directed message passing (incoming and outgoing neighbours
+aggregated separately), quantile-scaled inputs. **Features only on labelled
+nodes, on both sides**: train's unlabelled rows are blanked to match the
+featureless unlabelled nodes of days 36-49, with a has-features flag and log
+degree. Full-batch training on a day subgraph (no edge crosses a day, so a range
+of days is an exact subgraph).
+
+| Window | xgboost | GNN | blend 20% GNN |
+|---|---|---|---|
+| train ≤21 → 22–35 | 0.9187 | 0.888–0.917 (noisy) | 0.9145 |
+| train ≤24 → 25–35 | 0.9965 | 0.9879 | 0.9973 |
+| train ≤29 → 30–35 | 0.9972 | 0.9928 | 0.9977 |
+
+Rank correlation with xgboost 0.72–0.76 offline, 0.69 on test. Submitted at 20%
+on top of the best blend: **0.95547**, no gain. Same pattern as the MLP.
+
+## 15. Where the test period differs: days 43–49
+
+The model scores days 43–49 almost entirely clean: under 1% of rows above 0.5,
+against 6–14% on days 37–42. If those days hold illicit transactions of a kind
+the model has not seen, pooled AUC loses every pair where they sit below a
+clean day-36–42 row. `src/dayrank.py` mixes each score with its within-day rank.
+Offline (days 1–35) that only loses: −0.003 at 25%, −0.009 at 50%. Queued as a
+leaderboard experiment.

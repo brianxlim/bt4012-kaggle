@@ -12,3 +12,4 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-09-27T00:16:13,blend_full_from18_50,,,,165,79,0.95612,50/50 rank-average ridge + window_from18 (days 18-35)
 2026-09-28T00:16:05,blend3_full50_d23_d18,,,,165,79,0.95646,rank-average ridge .5 + recent_d23 .25 + window_from18 .25
 2026-09-28T00:16:05,blend3_20seed,,,,165,79,0.95531,"same 3-way blend, 20 seeds per model; spearman 0.998 with the 5-seed file"
+2026-09-28T03:32:28,blend3_gnn20,,,,165,79,0.95547,"best 3-way blend x0.8 + GNN (2-layer directed, 250 epochs x 5 seeds) x0.2; GNN spearman 0.693 vs base"
