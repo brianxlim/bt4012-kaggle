@@ -59,6 +59,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 15 | **Ridge .5 + days-23 .25 + days-18 .25** | — | **0.95646** | +0.0002 |
 | 16 | Same blend, 20 seeds per model | — | 0.95531 | −0.0012 |
 | 17 | Best blend 0.8 + graph neural net 0.2 | — | 0.95547 | −0.0010 |
+| 18 | Best blend + 25% within-day rank | — | 0.95476 | −0.0017 |
+| 19 | Best blend − 25% within-day rank (sharpened days) | — | 0.95574 | −0.0007 |
+| 20 | Graph neural net alone | — | 0.92745 | −0.0290 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -510,3 +513,8 @@ the model has not seen, pooled AUC loses every pair where they sit below a
 clean day-36–42 row. `src/dayrank.py` mixes each score with its within-day rank.
 Offline (days 1–35) that only loses: −0.003 at 25%, −0.009 at 50%. Queued as a
 leaderboard experiment.
+
+**Result (2026-09-29).** Both directions lost: +25% within-day rank 0.95476,
+−25% 0.95574. The blend's between-day balance is already near its optimum on
+the test days, and the model's low scores on days 43–49 look right. Lead closed.
+The GNN alone scored **0.92745**, too weak to pull a blend up. GNN route closed.
