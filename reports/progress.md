@@ -62,6 +62,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 18 | Best blend + 25% within-day rank | — | 0.95476 | −0.0017 |
 | 19 | Best blend − 25% within-day rank (sharpened days) | — | 0.95574 | −0.0007 |
 | 20 | Graph neural net alone | — | 0.92745 | −0.0290 |
+| 21 | 3-way blend + labelled-neighbour features | — | 0.95645 | −0.0000 |
+| 22 | Ridge .6 + days-23 .2 + days-18 .2 | — | 0.95638 | −0.0001 |
+| 23 | **Ridge .4 + days-23 .2 + days-18 .2 + days-12 .2** | — | **0.95672** | +0.0003 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -518,3 +521,18 @@ leaderboard experiment.
 −25% 0.95574. The blend's between-day balance is already near its optimum on
 the test days, and the model's low scores on days 43–49 look right. Lead closed.
 The GNN alone scored **0.92745**, too weak to pull a blend up. GNN route closed.
+
+---
+
+## 16. 2026-09-30
+
+Two teams now sit above 0.962 (0.96362, 0.96258); everyone else is below 0.959.
+
+- **Labelled-neighbour features** (`src/model_nlab.py`) added to all three window
+  models: 0.95645, identical to the base. Closed.
+- Offline, not submitted: **unlabelled training rows as clean negatives** −0.03
+  to −0.16 pre-cliff, ±0.001 post-cliff; **day number as a feature** +0.009 to
+  −0.005 across windows. **Test row order** correlates 0.07 with predictions.
+  Not a leak.
+- Near-best variants: 4-way (ridge .4, days-12/18/23 at .2 each) **0.95672**,
+  new best; ridge .6 variant 0.95638. Both within the ~0.001 noise band.
