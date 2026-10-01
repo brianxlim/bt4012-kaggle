@@ -65,6 +65,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 21 | 3-way blend + labelled-neighbour features | — | 0.95645 | −0.0000 |
 | 22 | Ridge .6 + days-23 .2 + days-18 .2 | — | 0.95638 | −0.0001 |
 | 23 | **Ridge .4 + days-23 .2 + days-18 .2 + days-12 .2** | — | **0.95672** | +0.0003 |
+| 24 | Best blend 0.8 + neighbour-features-only model 0.2 | — | 0.94869 | −0.0080 |
+| 25 | Best blend 0.7 + local-features-only model 0.3 | — | 0.95325 | −0.0035 |
+| 26 | Ridge, spw24 model, days-23, days-18 at .25 each | — | 0.95626 | −0.0005 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -536,3 +539,17 @@ Two teams now sit above 0.962 (0.96362, 0.96258); everyone else is below 0.959.
   Not a leak.
 - Near-best variants: 4-way (ridge .4, days-12/18/23 at .2 each) **0.95672**,
   new best; ridge .6 variant 0.95638. Both within the ~0.001 noise band.
+
+---
+
+## 17. 2026-10-01 — feature-subset partners both lose
+
+Offline, a neighbour-only model (feat_94–165) beat the full model across the
+regime cliff (0.9453 vs 0.9163 on train ≤15 → 16–29) and lost within a regime
+(0.9299 vs 0.9972 on 30–35), with rank correlation 0.43–0.62. Blended at 20%:
+**0.94869**, −0.008. The test days behave like the post-cliff regime.
+
+The mirror, a local-only model (feat_1–93) that pre-cliff windows disliked, at
+30%: **0.95325**, −0.0035. So "the leaderboard inverts the pre-cliff windows"
+is not a usable rule either; the full feature set is simply best. Both subset
+partners are closed. Code: `src/model_neigh.py`, `src/model_local.py`.

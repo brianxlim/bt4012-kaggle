@@ -19,3 +19,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-09-30T00:09:37,blend3_nlab,,,,165,79.0,0.95645,"3-way window blend rebuilt with g_nlab, g_frac labelled-neighbour features"
 2026-09-30T00:09:37,blend3_full60_d23_d18,,,,165,79.0,0.95638,ridge .6 + days-23 .2 + days-18 .2
 2026-09-30T00:09:37,blend4_full40_d23_d18_d12,,,,165,79.0,0.95672,ridge .4 + days-23 .2 + days-18 .2 + days-12 .2
+2026-10-01T00:08:13,blend4_neigh20,,,,,79.0,0.94869,best 4-way x0.8 + xgboost on neighbour features 94-165 only x0.2
+2026-10-01T00:08:13,blend4_local30,,,,,79.0,0.95325,best 4-way x0.7 + xgboost on local features 1-93 only x0.3
+2026-10-01T00:08:13,blend3_ridgebal_d23_d18,,,,,79.0,0.95626,ridge .25 + spw24/mcw16 .25 + days-23 .25 + days-18 .25
