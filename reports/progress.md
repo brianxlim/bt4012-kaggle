@@ -553,3 +553,17 @@ The mirror, a local-only model (feat_1–93) that pre-cliff windows disliked, at
 30%: **0.95325**, −0.0035. So "the leaderboard inverts the pre-cliff windows"
 is not a usable rule either; the full feature set is simply best. Both subset
 partners are closed. Code: `src/model_neigh.py`, `src/model_local.py`.
+
+### Post-cliff windows as the judge for blend partners
+
+Five post-cliff windows (train ≤k, score the next 6 days, k = 23–31, 2 seeds):
+
+| Partner | Alone vs xgboost | 30% blend | 50% blend |
+|---|---|---|---|
+| LightGBM | +0.0001 | +0.0004 (10/10) | +0.0005 (10/10) |
+| ExtraTrees | −0.0020 | +0.0010 (10/10) | +0.0009 (9/10) |
+| RandomForest | −0.0062 | −0.0002 | −0.0012 |
+
+Both families were rejected earlier on the pre-cliff windows. Queued:
+`blend4_et30`, `blend4_lgbm50`, `blend4_lgbm25_et25` (`src/model_families.py`).
+On test, ExtraTrees correlates only 0.685 with the best blend and LightGBM 0.933.
