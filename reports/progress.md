@@ -68,6 +68,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 24 | Best blend 0.8 + neighbour-features-only model 0.2 | — | 0.94869 | −0.0080 |
 | 25 | Best blend 0.7 + local-features-only model 0.3 | — | 0.95325 | −0.0035 |
 | 26 | Ridge, spw24 model, days-23, days-18 at .25 each | — | 0.95626 | −0.0005 |
+| 27 | Best blend 50/50 with LightGBM | — | 0.95347 | −0.0033 |
+| 28 | Best blend rebuilt at 40 trees per model | — | 0.95244 | −0.0043 |
+| 29 | Best blend 0.7 + ExtraTrees 0.3 | — | 0.95275 | −0.0040 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -567,3 +570,14 @@ Five post-cliff windows (train ≤k, score the next 6 days, k = 23–31, 2 seeds
 Both families were rejected earlier on the pre-cliff windows. Queued:
 `blend4_et30`, `blend4_lgbm50`, `blend4_lgbm25_et25` (`src/model_families.py`).
 On test, ExtraTrees correlates only 0.685 with the best blend and LightGBM 0.933.
+
+**Result (2026-10-02).** LightGBM 50%: 0.95347; ExtraTrees 30%: 0.95275. The
+post-cliff windows misjudge model families as badly as the pre-cliff ones did.
+Fewer trees (40 instead of 79) also lost (0.95244), as more trees did before:
+79 trees at learning rate 0.1 is near the optimum.
+
+Tally of everything that has gained on the leaderboard: settings (spw/mcw, tree
+shape), seed averaging, and blending the same xgboost model trained on
+different recent windows. Every feature change, every other model family
+(MLP, GNN, LightGBM, ExtraTrees, neighbour-only, local-only xgboost) and every
+post-processing step has lost.

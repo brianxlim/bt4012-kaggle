@@ -1,24 +1,27 @@
 run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
-2026-09-12T17:31:45,baseline_xgb,0.87586,,0.69447,165,193.0,0.93902,"{""seeds"": [42], ""note"": ""single seed, superseded by seed averaging""}"
-2026-09-12T18:18:00,raw165_seedavg,0.8917,0.00262,0.6586,165,235.0,0.94201,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.8957, ""days 19-32"": 0.8873, ""days 22-35"": 0.892}}"
-2026-09-12T18:37:00,tuned_d10cs05lr01,0.90304,0.0034,0.71775,165,97.0,0.94812,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9193, ""days 19-32"": 0.8913, ""days 22-35"": 0.8985}}"
-2026-09-14,spw757_mcw8,0.9101,0.0024,,165,68.0,0.95333,"scale_pos_weight 7.57 + min_child_weight 8 on the tuned settings; 3 folds x 10 seeds, 3/3 folds up, p=0.005"
-2026-09-17,ridge_d12cs07sub10g02,0.9215,0.0014,,165,79.0,0.95521,"settings ridge from the v2 random search: depth 12, colsample 0.7, subsample 1.0, gamma 0.2; +0.0110 seeds 0-9 and +0.0115 seeds 10-19, 49/60 paired wins"
-2026-09-26T04:58:08,driftrank75,0.92426,0.00166,0.77891,165,79.0,0.94921,"{""drift_threshold"": 0.75, ""drifting"": [""feat_2"", ""feat_3"", ""feat_100"", ""feat_101"", ""feat_103"", ""feat_106"", ""feat_107"", ""feat_109"", ""feat_112"", ""feat_113"", ""feat_115"", ""feat_136"", ""feat_137"", ""feat_139"", ""feat_143"", ""feat_145"", ""feat_151""]}"
-2026-09-26T05:25:18,balance_spw24_mcw16,0.9226,0.0023,0.75527,165,81.0,0.95475,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9215, ""days 19-32"": 0.9213, ""days 22-35"": 0.925}}"
-2026-09-26T05:28:43,recent_d23,,,,165,79.0,0.95353,"EXPERIMENT: model of record trained on days 23-35 only (9,942 rows); spearman 0.896 vs ridge on test"
-2026-09-27T00:16:13,blend_full_recent50,,,,165,79.0,0.95629,50/50 rank-average ridge (days 1-35) + recent_d23 (days 23-35)
-2026-09-27T00:16:13,windows_1_12_18_23_28,,,,165,79.0,0.95396,"equal rank-average of ridge settings trained from days 1,12,18,23,28"
-2026-09-27T00:16:13,blend_full_from18_50,,,,165,79.0,0.95612,50/50 rank-average ridge + window_from18 (days 18-35)
-2026-09-28T00:16:05,blend3_full50_d23_d18,,,,165,79.0,0.95646,rank-average ridge .5 + recent_d23 .25 + window_from18 .25
-2026-09-28T00:16:05,blend3_20seed,,,,165,79.0,0.95531,"same 3-way blend, 20 seeds per model; spearman 0.998 with the 5-seed file"
-2026-09-28T03:32:28,blend3_gnn20,,,,165,79.0,0.95547,"best 3-way blend x0.8 + GNN (2-layer directed, 250 epochs x 5 seeds) x0.2; GNN spearman 0.693 vs base"
-2026-09-29T00:08:21,blend3_dayrank25,,,,165,,0.95476,best blend: 0.75*overall rank + 0.25*within-day rank
-2026-09-29T00:08:21,blend3_daysharp25,,,,165,,0.95574,best blend: 1.25*overall rank - 0.25*within-day rank
-2026-09-29T00:08:21,gnn_5seed,,,,165,,0.92745,"GNN alone, 250 epochs x 5 seeds"
-2026-09-30T00:09:37,blend3_nlab,,,,165,79.0,0.95645,"3-way window blend rebuilt with g_nlab, g_frac labelled-neighbour features"
-2026-09-30T00:09:37,blend3_full60_d23_d18,,,,165,79.0,0.95638,ridge .6 + days-23 .2 + days-18 .2
-2026-09-30T00:09:37,blend4_full40_d23_d18_d12,,,,165,79.0,0.95672,ridge .4 + days-23 .2 + days-18 .2 + days-12 .2
+2026-09-12T17:31:45,baseline_xgb,0.87586,,0.69447,165.0,193.0,0.93902,"{""seeds"": [42], ""note"": ""single seed, superseded by seed averaging""}"
+2026-09-12T18:18:00,raw165_seedavg,0.8917,0.00262,0.6586,165.0,235.0,0.94201,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.8957, ""days 19-32"": 0.8873, ""days 22-35"": 0.892}}"
+2026-09-12T18:37:00,tuned_d10cs05lr01,0.90304,0.0034,0.71775,165.0,97.0,0.94812,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9193, ""days 19-32"": 0.8913, ""days 22-35"": 0.8985}}"
+2026-09-14,spw757_mcw8,0.9101,0.0024,,165.0,68.0,0.95333,"scale_pos_weight 7.57 + min_child_weight 8 on the tuned settings; 3 folds x 10 seeds, 3/3 folds up, p=0.005"
+2026-09-17,ridge_d12cs07sub10g02,0.9215,0.0014,,165.0,79.0,0.95521,"settings ridge from the v2 random search: depth 12, colsample 0.7, subsample 1.0, gamma 0.2; +0.0110 seeds 0-9 and +0.0115 seeds 10-19, 49/60 paired wins"
+2026-09-26T04:58:08,driftrank75,0.92426,0.00166,0.77891,165.0,79.0,0.94921,"{""drift_threshold"": 0.75, ""drifting"": [""feat_2"", ""feat_3"", ""feat_100"", ""feat_101"", ""feat_103"", ""feat_106"", ""feat_107"", ""feat_109"", ""feat_112"", ""feat_113"", ""feat_115"", ""feat_136"", ""feat_137"", ""feat_139"", ""feat_143"", ""feat_145"", ""feat_151""]}"
+2026-09-26T05:25:18,balance_spw24_mcw16,0.9226,0.0023,0.75527,165.0,81.0,0.95475,"{""seeds"": [0, 1, 2, 3, 4], ""per_fold"": {""days 16-29"": 0.9215, ""days 19-32"": 0.9213, ""days 22-35"": 0.925}}"
+2026-09-26T05:28:43,recent_d23,,,,165.0,79.0,0.95353,"EXPERIMENT: model of record trained on days 23-35 only (9,942 rows); spearman 0.896 vs ridge on test"
+2026-09-27T00:16:13,blend_full_recent50,,,,165.0,79.0,0.95629,50/50 rank-average ridge (days 1-35) + recent_d23 (days 23-35)
+2026-09-27T00:16:13,windows_1_12_18_23_28,,,,165.0,79.0,0.95396,"equal rank-average of ridge settings trained from days 1,12,18,23,28"
+2026-09-27T00:16:13,blend_full_from18_50,,,,165.0,79.0,0.95612,50/50 rank-average ridge + window_from18 (days 18-35)
+2026-09-28T00:16:05,blend3_full50_d23_d18,,,,165.0,79.0,0.95646,rank-average ridge .5 + recent_d23 .25 + window_from18 .25
+2026-09-28T00:16:05,blend3_20seed,,,,165.0,79.0,0.95531,"same 3-way blend, 20 seeds per model; spearman 0.998 with the 5-seed file"
+2026-09-28T03:32:28,blend3_gnn20,,,,165.0,79.0,0.95547,"best 3-way blend x0.8 + GNN (2-layer directed, 250 epochs x 5 seeds) x0.2; GNN spearman 0.693 vs base"
+2026-09-29T00:08:21,blend3_dayrank25,,,,165.0,,0.95476,best blend: 0.75*overall rank + 0.25*within-day rank
+2026-09-29T00:08:21,blend3_daysharp25,,,,165.0,,0.95574,best blend: 1.25*overall rank - 0.25*within-day rank
+2026-09-29T00:08:21,gnn_5seed,,,,165.0,,0.92745,"GNN alone, 250 epochs x 5 seeds"
+2026-09-30T00:09:37,blend3_nlab,,,,165.0,79.0,0.95645,"3-way window blend rebuilt with g_nlab, g_frac labelled-neighbour features"
+2026-09-30T00:09:37,blend3_full60_d23_d18,,,,165.0,79.0,0.95638,ridge .6 + days-23 .2 + days-18 .2
+2026-09-30T00:09:37,blend4_full40_d23_d18_d12,,,,165.0,79.0,0.95672,ridge .4 + days-23 .2 + days-18 .2 + days-12 .2
 2026-10-01T00:08:13,blend4_neigh20,,,,,79.0,0.94869,best 4-way x0.8 + xgboost on neighbour features 94-165 only x0.2
 2026-10-01T00:08:13,blend4_local30,,,,,79.0,0.95325,best 4-way x0.7 + xgboost on local features 1-93 only x0.3
 2026-10-01T00:08:13,blend3_ridgebal_d23_d18,,,,,79.0,0.95626,ridge .25 + spw24/mcw16 .25 + days-23 .25 + days-18 .25
+2026-10-02T00:08:19,blend4_lgbm50,,,,165.0,,0.95347,"best 4-way 50/50 with LightGBM 300 trees, 5 seeds; test spearman 0.933"
+2026-10-02T00:08:19,blend4_trees40,,,,165.0,,0.95244,best 4-way rebuilt with 40 trees per model instead of 79
+2026-10-02T00:08:19,blend4_et30,,,,165.0,,0.95275,best 4-way x0.7 + ExtraTrees x0.3; test spearman 0.685
