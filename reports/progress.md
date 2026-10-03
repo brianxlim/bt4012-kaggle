@@ -71,6 +71,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 27 | Best blend 50/50 with LightGBM | — | 0.95347 | −0.0033 |
 | 28 | Best blend rebuilt at 40 trees per model | — | 0.95244 | −0.0043 |
 | 29 | Best blend 0.7 + ExtraTrees 0.3 | — | 0.95275 | −0.0040 |
+| 30 | Ridge .4 + days-6/12/18/23 at .15 | — | 0.95608 | −0.0006 |
+| 31 | 4-way with older d10 settings for the recent windows | — | 0.95546 | −0.0013 |
+| 32 | Ridge .34 + days-12/18/23 at .22 | — | 0.95671 | −0.0000 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -581,3 +584,6 @@ shape), seed averaging, and blending the same xgboost model trained on
 different recent windows. Every feature change, every other model family
 (MLP, GNN, LightGBM, ExtraTrees, neighbour-only, local-only xgboost) and every
 post-processing step has lost.
+
+**2026-10-03.** Three more window-blend variants: 0.95608, 0.95546, 0.95671.
+None beat 0.95672. The window-blend direction has plateaued.

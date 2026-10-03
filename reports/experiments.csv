@@ -25,3 +25,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-02T00:08:19,blend4_lgbm50,,,,165.0,,0.95347,"best 4-way 50/50 with LightGBM 300 trees, 5 seeds; test spearman 0.933"
 2026-10-02T00:08:19,blend4_trees40,,,,165.0,,0.95244,best 4-way rebuilt with 40 trees per model instead of 79
 2026-10-02T00:08:19,blend4_et30,,,,165.0,,0.95275,best 4-way x0.7 + ExtraTrees x0.3; test spearman 0.685
+2026-10-03T00:06:51,blend5_full40_d6_d12_d18_d23,,,,165.0,,0.95608,ridge .4 + days-6/12/18/23 at .15 each
+2026-10-03T00:06:51,blend4_oldwin,,,,165.0,,0.95546,"ridge .4 + days-12/18/23 windows with older d10 cs0.5 settings, .2 each"
+2026-10-03T00:06:51,blend4_full34,,,,165.0,,0.95671,ridge .34 + days-12/18/23 at .22 each
