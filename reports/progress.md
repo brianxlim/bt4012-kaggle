@@ -587,3 +587,21 @@ post-processing step has lost.
 
 **2026-10-03.** Three more window-blend variants: 0.95608, 0.95546, 0.95671.
 None beat 0.95672. The window-blend direction has plateaued.
+
+---
+
+## 18. 2026-10-05 — research, no submissions
+
+Five teams now above 0.96 (leader 0.96805). Several jumped from ~0.957 to
+0.961+ within the same two days, which suggests a shared hint rather than five
+independent discoveries.
+
+- **Competition Discussion tab:** not reachable. The page needs a login, and the
+  Kaggle API returns 403 Forbidden for discussions with this token. No public
+  notebooks exist for the competition.
+- **Literature on the same day-based split** (train up to step 34, test
+  35–49): XGBoost is the strongest reported model (PR-AUC 0.807 vs random
+  forest 0.786). Every published model collapses after the step-43 dark-market
+  shutdown, and no paper reports a fix. A feature-gated temporal GNN does not
+  beat random forest on F1 (0.774 vs 0.796). Nothing found beats the approach
+  already used here.
