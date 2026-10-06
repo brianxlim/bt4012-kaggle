@@ -74,6 +74,9 @@ No feature engineering, no external data, no graph features, no use of the
 | 30 | Ridge .4 + days-6/12/18/23 at .15 | — | 0.95608 | −0.0006 |
 | 31 | 4-way with older d10 settings for the recent windows | — | 0.95546 | −0.0013 |
 | 32 | Ridge .34 + days-12/18/23 at .22 | — | 0.95671 | −0.0000 |
+| 33 | CatBoost alone | — | 0.94800 | −0.0087 |
+| 34 | Random forest alone | — | 0.92618 | −0.0305 |
+| 35 | Best blend 0.75 + CatBoost 0.25 | — | 0.95667 | −0.0001 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -605,3 +608,18 @@ independent discoveries.
   shutdown, and no paper reports a fix. A feature-gated temporal GNN does not
   beat random forest on F1 (0.774 vs 0.796). Nothing found beats the approach
   already used here.
+
+---
+
+## 19. 2026-10-06 — other model families, judged only on the leaderboard
+
+| Model (all features, all days, 5 seeds) | Leaderboard |
+|---|---|
+| xgboost (model of record) | 0.95521 |
+| CatBoost (600 iters, depth 6, balanced) | 0.94800 |
+| Random forest (1000 trees) | 0.92618 |
+| Best blend 0.75 + CatBoost 0.25 | 0.95667 (tie with best) |
+
+TabPFN (pretrained tabular foundation model) installed but needs a licence
+token from priorlabs.ai tied to the user's account before weights download.
+Code: `src/model_alt.py`.

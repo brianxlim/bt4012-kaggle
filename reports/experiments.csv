@@ -28,3 +28,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-03T00:06:51,blend5_full40_d6_d12_d18_d23,,,,165.0,,0.95608,ridge .4 + days-6/12/18/23 at .15 each
 2026-10-03T00:06:51,blend4_oldwin,,,,165.0,,0.95546,"ridge .4 + days-12/18/23 windows with older d10 cs0.5 settings, .2 each"
 2026-10-03T00:06:51,blend4_full34,,,,165.0,,0.95671,ridge .34 + days-12/18/23 at .22 each
+2026-10-06T11:56:41,catboost_5seed,,,,165.0,,0.948,"CatBoost alone: 600 iters lr .05 depth 6 balanced, 5 seeds; spearman 0.784 vs best"
+2026-10-06T11:56:41,rf_5seed,,,,165.0,,0.92618,"RandomForest alone: 1000 trees sqrt, 5 seeds; spearman 0.867 vs best"
+2026-10-06T11:56:41,blend4_cat25,,,,165.0,,0.95667,best 4-way x0.75 + CatBoost x0.25
