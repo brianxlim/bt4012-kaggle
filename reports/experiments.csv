@@ -31,3 +31,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-06T11:56:41,catboost_5seed,,,,165.0,,0.948,"CatBoost alone: 600 iters lr .05 depth 6 balanced, 5 seeds; spearman 0.784 vs best"
 2026-10-06T11:56:41,rf_5seed,,,,165.0,,0.92618,"RandomForest alone: 1000 trees sqrt, 5 seeds; spearman 0.867 vs best"
 2026-10-06T11:56:41,blend4_cat25,,,,165.0,,0.95667,best 4-way x0.75 + CatBoost x0.25
+2026-10-07T07:01:11,tabpfn_bag0,,,,165.0,,0.96026,"TabPFN alone, 1 bag: all illicit + sampled licit = 8,000 context rows, n_estimators 2; spearman 0.846 vs best xgb blend"
+2026-10-07T07:01:11,blend_tabpfn50_xgb50,,,,165.0,,0.96149,50/50 rank-average TabPFN bag0 + best xgboost 4-way window blend
