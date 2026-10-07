@@ -3,4 +3,5 @@
 __pycache__/
 cache/
 data/
-.DS_Store
+.DS_Storecatboost_info/
+logs/

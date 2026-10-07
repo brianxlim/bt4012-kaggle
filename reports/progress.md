@@ -50,6 +50,33 @@ No feature engineering, no external data, no graph features, no use of the
 | 6 | Half neural net, half XGBoost | 0.9277 | 0.94800 | −0.0001 |
 | 7 | + `scale_pos_weight` 7.57, `min_child_weight` 8 | 0.9101 | 0.95333 | **+0.0052** |
 | 8 | + tree-shape ridge: d12, cs 0.7, sub 1.0, gamma 0.2 | 0.9215 | **0.95521** | **+0.0019** |
+| 9 | Ridge + 17 drifting features replaced by within-day ranks | 0.9243 | 0.94921 | **−0.0060** |
+| 10 | Ridge + heavier balance: spw 24, mcw 16 | 0.9226 | 0.95475 | −0.0005 |
+| 11 | EXPERIMENT: ridge trained on days 23–35 only | — | 0.95353 | −0.0017 |
+| 12 | **50/50 rank-average: ridge + days-23–35 model** | — | **0.95629** | **+0.0011** |
+| 13 | Equal average of models from start days 1, 12, 18, 23, 28 | — | 0.95396 | −0.0013 |
+| 14 | 50/50 rank-average: ridge + days-18–35 model | — | 0.95612 | +0.0009 |
+| 15 | **Ridge .5 + days-23 .25 + days-18 .25** | — | **0.95646** | +0.0002 |
+| 16 | Same blend, 20 seeds per model | — | 0.95531 | −0.0012 |
+| 17 | Best blend 0.8 + graph neural net 0.2 | — | 0.95547 | −0.0010 |
+| 18 | Best blend + 25% within-day rank | — | 0.95476 | −0.0017 |
+| 19 | Best blend − 25% within-day rank (sharpened days) | — | 0.95574 | −0.0007 |
+| 20 | Graph neural net alone | — | 0.92745 | −0.0290 |
+| 21 | 3-way blend + labelled-neighbour features | — | 0.95645 | −0.0000 |
+| 22 | Ridge .6 + days-23 .2 + days-18 .2 | — | 0.95638 | −0.0001 |
+| 23 | **Ridge .4 + days-23 .2 + days-18 .2 + days-12 .2** | — | **0.95672** | +0.0003 |
+| 24 | Best blend 0.8 + neighbour-features-only model 0.2 | — | 0.94869 | −0.0080 |
+| 25 | Best blend 0.7 + local-features-only model 0.3 | — | 0.95325 | −0.0035 |
+| 26 | Ridge, spw24 model, days-23, days-18 at .25 each | — | 0.95626 | −0.0005 |
+| 27 | Best blend 50/50 with LightGBM | — | 0.95347 | −0.0033 |
+| 28 | Best blend rebuilt at 40 trees per model | — | 0.95244 | −0.0043 |
+| 29 | Best blend 0.7 + ExtraTrees 0.3 | — | 0.95275 | −0.0040 |
+| 30 | Ridge .4 + days-6/12/18/23 at .15 | — | 0.95608 | −0.0006 |
+| 31 | 4-way with older d10 settings for the recent windows | — | 0.95546 | −0.0013 |
+| 32 | Ridge .34 + days-12/18/23 at .22 | — | 0.95671 | −0.0000 |
+| 33 | CatBoost alone | — | 0.94800 | −0.0087 |
+| 34 | Random forest alone | — | 0.92618 | −0.0305 |
+| 35 | Best blend 0.75 + CatBoost 0.25 | — | 0.95667 | −0.0001 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -405,3 +432,194 @@ than a breakthrough.
 Anything touching the feature set or the model family has a 0-for-3 record and
 no offline measurement can screen it first. Such a change is a submission spent
 to buy information, and should be described that way.
+
+---
+
+## 11. 2026-09-26 — three submissions, none improved
+
+Standing at the start: 4th, 0.95521 against a leader at 0.95741.
+
+**Drifting features as within-day ranks (0.94921, −0.0060).** 17 features whose
+value alone separates train from test at AUC > 0.75 were replaced by their
+percentile rank among the same day's labelled rows. Offline this was the most
+convincing feature result so far: +0.0085 (seeds 5–14), +0.0118 (seeds 15–24,
+27/30 wins), a plateau over thresholds 0.65–0.80, and positive even on the
+saturated post-cliff windows (+0.0004, 9/10 wins). The leaderboard inverted it
+anyway. Likely cause: pooled AUC ranks across days, and ranking within a day
+throws away the between-day level differences that the raw values carry.
+Feature-set changes are now **0 for 3**.
+
+**Heavier class balance, spw 24 + mcw 16 (0.95475, −0.0005).** A 3×3 grid of
+spw {12,16,24} × mcw {12,16,24} was positive in every cell; the top cell
+replicated without shrinkage (+0.0073 → +0.0071 on unseen seeds). It landed flat.
+This is the first settings change to not transfer. Five xgboost variants now sit
+in 0.9547–0.9552 on the public board: the settings direction looks exhausted.
+
+**Days 23–35 only (0.95353, −0.0017).** An experiment. It uses a third of the
+rows and still comes within 0.0017 — while ranking the test rows differently from
+the full model (Spearman 0.896). Two near-equal, different models are the one
+blending setup not yet tried here; earlier blends paired a strong model with a
+weaker or near-identical one.
+
+Also measured, not submitted: labelled-neighbour counts (a node counts as
+labelled if it has a label in train or a row in test.csv — symmetric by
+construction). +0.0025 on seeds 0–4, +0.0004 on seeds 5–14. Noise.
+
+---
+
+## 12. 2026-09-27 — window blending, first blend to gain
+
+A new leader appeared overnight at 0.96362 (+0.006 over the previous top).
+Checked for a leak first: transaction id (AUC 0.56, 0.50 post-cliff) and
+within-day row position (0.55) carry at most weak signal. Not the explanation.
+
+| Blend | Leaderboard |
+|---|---|
+| ridge 50 / days-23–35 50 | **0.95629** (best) |
+| ridge 50 / days-18–35 50 | 0.95612 |
+| five windows equal (1, 12, 18, 23, 28) | 0.95396 |
+
+Two different recent windows each add ~+0.001 when paired 50/50 with the full
+model, so it is probably real rather than sampling luck. It fails when the full
+model is diluted to 20% and a 6,312-row window (days 28–35, Spearman 0.80 with
+the full model) joins. Models: `src/model_recent.py`, `src/model_windows.py`;
+blending: `src/blend.py`.
+
+---
+
+## 13. 2026-09-28 — the leaderboard's noise floor, measured directly
+
+The 3-way blend scored 0.95646. The same blend with 20 seeds per model instead
+of 5 scored 0.95531, although the two files agree at Spearman **0.998**. So two
+near-identical submissions differ by **0.0012** on the public board. That is as
+large as every blend gain recorded since 2026-09-27 (+0.0009 to +0.0013). Those
+gains cannot be told apart from sampling noise, and choosing between them on the
+public score only fits the 30% public sample.
+
+A local-features-only model (93 features) was checked as a blend partner
+offline. The blend lost on four of five windows (up to −0.008 pre-cliff), gained
++0.0005 on one. Not submitted; the third slot was left unused.
+
+---
+
+## 14. Graph neural network (`src/gnn.py`, `src/model_gnn.py`)
+
+Two layers of directed message passing (incoming and outgoing neighbours
+aggregated separately), quantile-scaled inputs. **Features only on labelled
+nodes, on both sides**: train's unlabelled rows are blanked to match the
+featureless unlabelled nodes of days 36-49, with a has-features flag and log
+degree. Full-batch training on a day subgraph (no edge crosses a day, so a range
+of days is an exact subgraph).
+
+| Window | xgboost | GNN | blend 20% GNN |
+|---|---|---|---|
+| train ≤21 → 22–35 | 0.9187 | 0.888–0.917 (noisy) | 0.9145 |
+| train ≤24 → 25–35 | 0.9965 | 0.9879 | 0.9973 |
+| train ≤29 → 30–35 | 0.9972 | 0.9928 | 0.9977 |
+
+Rank correlation with xgboost 0.72–0.76 offline, 0.69 on test. Submitted at 20%
+on top of the best blend: **0.95547**, no gain. Same pattern as the MLP.
+
+## 15. Where the test period differs: days 43–49
+
+The model scores days 43–49 almost entirely clean: under 1% of rows above 0.5,
+against 6–14% on days 37–42. If those days hold illicit transactions of a kind
+the model has not seen, pooled AUC loses every pair where they sit below a
+clean day-36–42 row. `src/dayrank.py` mixes each score with its within-day rank.
+Offline (days 1–35) that only loses: −0.003 at 25%, −0.009 at 50%. Queued as a
+leaderboard experiment.
+
+**Result (2026-09-29).** Both directions lost: +25% within-day rank 0.95476,
+−25% 0.95574. The blend's between-day balance is already near its optimum on
+the test days, and the model's low scores on days 43–49 look right. Lead closed.
+The GNN alone scored **0.92745**, too weak to pull a blend up. GNN route closed.
+
+---
+
+## 16. 2026-09-30
+
+Two teams now sit above 0.962 (0.96362, 0.96258); everyone else is below 0.959.
+
+- **Labelled-neighbour features** (`src/model_nlab.py`) added to all three window
+  models: 0.95645, identical to the base. Closed.
+- Offline, not submitted: **unlabelled training rows as clean negatives** −0.03
+  to −0.16 pre-cliff, ±0.001 post-cliff; **day number as a feature** +0.009 to
+  −0.005 across windows. **Test row order** correlates 0.07 with predictions.
+  Not a leak.
+- Near-best variants: 4-way (ridge .4, days-12/18/23 at .2 each) **0.95672**,
+  new best; ridge .6 variant 0.95638. Both within the ~0.001 noise band.
+
+---
+
+## 17. 2026-10-01 — feature-subset partners both lose
+
+Offline, a neighbour-only model (feat_94–165) beat the full model across the
+regime cliff (0.9453 vs 0.9163 on train ≤15 → 16–29) and lost within a regime
+(0.9299 vs 0.9972 on 30–35), with rank correlation 0.43–0.62. Blended at 20%:
+**0.94869**, −0.008. The test days behave like the post-cliff regime.
+
+The mirror, a local-only model (feat_1–93) that pre-cliff windows disliked, at
+30%: **0.95325**, −0.0035. So "the leaderboard inverts the pre-cliff windows"
+is not a usable rule either; the full feature set is simply best. Both subset
+partners are closed. Code: `src/model_neigh.py`, `src/model_local.py`.
+
+### Post-cliff windows as the judge for blend partners
+
+Five post-cliff windows (train ≤k, score the next 6 days, k = 23–31, 2 seeds):
+
+| Partner | Alone vs xgboost | 30% blend | 50% blend |
+|---|---|---|---|
+| LightGBM | +0.0001 | +0.0004 (10/10) | +0.0005 (10/10) |
+| ExtraTrees | −0.0020 | +0.0010 (10/10) | +0.0009 (9/10) |
+| RandomForest | −0.0062 | −0.0002 | −0.0012 |
+
+Both families were rejected earlier on the pre-cliff windows. Queued:
+`blend4_et30`, `blend4_lgbm50`, `blend4_lgbm25_et25` (`src/model_families.py`).
+On test, ExtraTrees correlates only 0.685 with the best blend and LightGBM 0.933.
+
+**Result (2026-10-02).** LightGBM 50%: 0.95347; ExtraTrees 30%: 0.95275. The
+post-cliff windows misjudge model families as badly as the pre-cliff ones did.
+Fewer trees (40 instead of 79) also lost (0.95244), as more trees did before:
+79 trees at learning rate 0.1 is near the optimum.
+
+Tally of everything that has gained on the leaderboard: settings (spw/mcw, tree
+shape), seed averaging, and blending the same xgboost model trained on
+different recent windows. Every feature change, every other model family
+(MLP, GNN, LightGBM, ExtraTrees, neighbour-only, local-only xgboost) and every
+post-processing step has lost.
+
+**2026-10-03.** Three more window-blend variants: 0.95608, 0.95546, 0.95671.
+None beat 0.95672. The window-blend direction has plateaued.
+
+---
+
+## 18. 2026-10-05 — research, no submissions
+
+Five teams now above 0.96 (leader 0.96805). Several jumped from ~0.957 to
+0.961+ within the same two days, which suggests a shared hint rather than five
+independent discoveries.
+
+- **Competition Discussion tab:** not reachable. The page needs a login, and the
+  Kaggle API returns 403 Forbidden for discussions with this token. No public
+  notebooks exist for the competition.
+- **Literature on the same day-based split** (train up to step 34, test
+  35–49): XGBoost is the strongest reported model (PR-AUC 0.807 vs random
+  forest 0.786). Every published model collapses after the step-43 dark-market
+  shutdown, and no paper reports a fix. A feature-gated temporal GNN does not
+  beat random forest on F1 (0.774 vs 0.796). Nothing found beats the approach
+  already used here.
+
+---
+
+## 19. 2026-10-06 — other model families, judged only on the leaderboard
+
+| Model (all features, all days, 5 seeds) | Leaderboard |
+|---|---|
+| xgboost (model of record) | 0.95521 |
+| CatBoost (600 iters, depth 6, balanced) | 0.94800 |
+| Random forest (1000 trees) | 0.92618 |
+| Best blend 0.75 + CatBoost 0.25 | 0.95667 (tie with best) |
+
+TabPFN (pretrained tabular foundation model) installed but needs a licence
+token from priorlabs.ai tied to the user's account before weights download.
+Code: `src/model_alt.py`.
