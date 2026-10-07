@@ -8,7 +8,9 @@ CONTEXT rows, and the bags' rank-averaged scores are the prediction.
 On 3,000 rows from days 20-29 scored on days 30-35 it beat xgboost trained on
 the same rows (0.9978 vs 0.9955). Needs TABPFN_TOKEN (licence at priorlabs.ai).
 
-    python src/model_tabpfn.py
+    python src/model_tabpfn.py                 # all days, bags 0-2
+    python src/model_tabpfn.py 18 0 3 recent18 # context from day 18 on, bags 0-2
+    python src/model_tabpfn.py 1 3 6 all       # all days, bags 3-5
 """
 
 import sys
@@ -31,23 +33,29 @@ CHUNK = 2000
 
 
 def main():
+    first_day, bag_from, bag_to, tag = 1, 0, BAGS, ""
+    if len(sys.argv) > 1:
+        first_day, bag_from, bag_to, tag = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
     labelled, test = load_labelled(), load_test()
+    labelled = labelled[labelled["time_step"] >= first_day].reset_index(drop=True)
     y = labelled["label"].to_numpy()
     illicit, licit = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
     Xt = test[FEATURES].to_numpy()
     total = np.zeros(len(test))
-    for bag in range(BAGS):
-        out = SUBMISSIONS.parent / "cache" / f"tabpfn_bag{bag}.npy"
+    prefix = f"tabpfn_{tag}_" if tag and tag != "all" else "tabpfn_"
+    for bag in range(bag_from, bag_to):
+        out = SUBMISSIONS.parent / "cache" / f"{prefix}bag{bag}.npy"
         if not out.exists():
             rng = np.random.default_rng(bag)
-            rows = np.r_[illicit, rng.choice(licit, CONTEXT - len(illicit), replace=False)]
+            take = min(len(licit), CONTEXT - len(illicit))
+            rows = np.r_[illicit, rng.choice(licit, take, replace=False)]
             model = TabPFNClassifier(device="cpu", n_estimators=ESTIMATORS, random_state=bag,
                                      ignore_pretraining_limits=True)
             model.fit(labelled.loc[rows, FEATURES].to_numpy(), y[rows])
             parts = []
             for i in range(0, len(Xt), CHUNK):
                 # each chunk is saved, so a stopped run resumes where it left off
-                chunk_path = out.with_name(f"tabpfn_bag{bag}_{i}.npy")
+                chunk_path = out.with_name(f"{out.stem}_{i}.npy")
                 if not chunk_path.exists():
                     start = time.time()
                     np.save(chunk_path, model.predict_proba(Xt[i:i + CHUNK])[:, 1])
@@ -56,7 +64,8 @@ def main():
             np.save(out, np.concatenate(parts))
         total += pd.Series(np.load(out)).rank(pct=True).to_numpy()
         print(f"  bag {bag} done", flush=True)
-    path = write_submission(total / BAGS, "tabpfn_bag3")
+    name = f"{prefix}bags{bag_from}-{bag_to - 1}" if tag else "tabpfn_bag3"
+    path = write_submission(total / (bag_to - bag_from), name)
     best = pd.read_csv(SUBMISSIONS / "blend4_full40_d23_d18_d12.csv")["target"]
     print(f"  spearman vs best {pd.Series(total).corr(best, method='spearman'):.3f} -> {path.name}")
 
