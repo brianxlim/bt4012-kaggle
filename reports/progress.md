@@ -77,6 +77,10 @@ No feature engineering, no external data, no graph features, no use of the
 | 33 | CatBoost alone | — | 0.94800 | −0.0087 |
 | 34 | Random forest alone | — | 0.92618 | −0.0305 |
 | 35 | Best blend 0.75 + CatBoost 0.25 | — | 0.95667 | −0.0001 |
+| 36 | TabPFN alone, 1 bag | — | 0.96026 | +0.0035 |
+| 37 | TabPFN 1 bag 0.5 + xgboost window blend 0.5 | — | 0.96149 | +0.0048 |
+| 38 | TabPFN 3 bags 0.5 + xgboost window blend 0.5 | — | 0.96301 | +0.0063 |
+| 39 | **TabPFN 3 bags 0.65 + xgboost window blend 0.35** | — | **0.96389** | +0.0072 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -623,3 +627,24 @@ independent discoveries.
 TabPFN (pretrained tabular foundation model) installed but needs a licence
 token from priorlabs.ai tied to the user's account before weights download.
 Code: `src/model_alt.py`.
+
+---
+
+## 20. TabPFN — the first model family to beat xgboost
+
+TabPFN is a pretrained tabular foundation model: it reads a sample of labelled
+rows as context and predicts new rows in one forward pass, with no training.
+`src/model_tabpfn.py` bags it on CPU: each bag keeps all 3,644 illicit rows plus
+4,356 sampled licit rows (8,000-row context), and bags are rank-averaged.
+
+| Submission | Leaderboard |
+|---|---|
+| TabPFN alone, 1 bag | 0.96026 |
+| TabPFN 1 bag 0.5 + xgboost window blend 0.5 | 0.96149 |
+| TabPFN 3 bags 0.5 + xgboost window blend 0.5 | 0.96301 |
+| TabPFN 3 bags 0.65 + xgboost window blend 0.35 | **0.96389** |
+
+On 3,000 rows from days 20–29 scored on days 30–35 it beat xgboost trained on
+the same rows (0.9978 vs 0.9955). TabPFN and the xgboost blend correlate 0.85 on
+test. Bagging and a heavier TabPFN weight both helped. Cost: ~18 minutes per bag
+on 4 CPU cores. Needs `TABPFN_TOKEN` (licence at priorlabs.ai).
