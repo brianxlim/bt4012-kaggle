@@ -82,6 +82,7 @@ No feature engineering, no external data, no graph features, no use of the
 | 38 | TabPFN 3 bags 0.5 + xgboost window blend 0.5 | — | 0.96301 | +0.0063 |
 | 39 | TabPFN 3 bags 0.65 + xgboost window blend 0.35 | — | 0.96389 | +0.0072 |
 | 40 | **TabPFN all-days .40 + TabPFN days-18+ context .25 + xgboost .35** | — | **0.96529** | +0.0086 |
+| 41 | TabPFN all-days .30 + days-18+ (3 bags) .35 + xgboost .35 | — | 0.96519 | +0.0085 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.

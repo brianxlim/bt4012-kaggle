@@ -36,3 +36,4 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-07T07:34:58,blend_tabpfn3bag50_xgb50,,,,165.0,,0.96301,50/50 rank-average TabPFN 3 bags + best xgboost 4-way window blend
 2026-10-08T00:05:16,blend_tabpfn3bag65_xgb35,,,,165.0,,0.96389,rank-average TabPFN 3 bags 0.65 + best xgboost 4-way window blend 0.35
 2026-10-08T00:10:37,blend_tabpfnall40_recent25_xgb35,,,,165.0,,0.96529,TabPFN all-days 3 bags .40 + TabPFN context from days 18+ (1 bag) .25 + xgboost window blend .35; recent18 vs all-days TabPFN spearman 0.95
+2026-10-08T00:38:23,blend_tabpfnall30_recent35_xgb35,,,,165.0,,0.96519,TabPFN all-days 3 bags .30 + TabPFN days-18+ 3 bags .35 + xgboost window blend .35
