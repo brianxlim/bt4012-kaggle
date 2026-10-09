@@ -13,6 +13,7 @@ the same rows (0.9978 vs 0.9955). Needs TABPFN_TOKEN (licence at priorlabs.ai).
     python src/model_tabpfn.py 1 3 6 all       # all days, bags 3-5
 """
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -26,7 +27,7 @@ from tabpfn import TabPFNClassifier
 from data import FEATURES, SUBMISSIONS, load_labelled, load_test
 from experiment import write_submission
 
-CONTEXT = 8000
+CONTEXT = int(os.environ.get("TABPFN_CONTEXT", 8000))  # rows of context per bag
 BAGS = 3
 ESTIMATORS = 2
 CHUNK = 2000
