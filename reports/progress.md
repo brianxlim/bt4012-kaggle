@@ -83,6 +83,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 39 | TabPFN 3 bags 0.65 + xgboost window blend 0.35 | — | 0.96389 | +0.0072 |
 | 40 | **TabPFN all-days .40 + TabPFN days-18+ context .25 + xgboost .35** | — | **0.96529** | +0.0086 |
 | 41 | TabPFN all-days .30 + days-18+ (3 bags) .35 + xgboost .35 | — | 0.96519 | +0.0085 |
+| 42 | TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35 | — | 0.96506 | +0.0083 |
+| 43 | **TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25** | — | **0.96570** | +0.0090 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -654,3 +656,6 @@ on 4 CPU cores. Needs `TABPFN_TOKEN` (licence at priorlabs.ai).
 Recent-days context helps TabPFN as it helped xgboost: a bag whose context is
 drawn from days 18–35 only (all 2,265 illicit rows there plus sampled licit),
 mixed in at 25%, gave **0.96529**.
+
+More bags stopped helping after three (5 all-days bags: 0.96506, a tie). A larger
+TabPFN share keeps helping: .50 → .65 → .75 gave 0.96301 → 0.96389 → 0.96570.
