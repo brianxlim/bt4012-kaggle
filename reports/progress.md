@@ -87,7 +87,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 43 | **TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25** | — | **0.96570** | +0.0090 |
 | 44 | TabPFN all 6 bags .40 + days-18+ .20 + days-23+ .20 + xgboost .20 | — | 0.96552 | +0.0089 |
 | 45 | TabPFN all 6 bags .50 + days-18+ .35 + xgboost .15 | — | 0.96647 | +0.0098 |
-| 46 | **TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45** | — | **0.96692** | +0.0103 |
+| 46 | TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45 | — | 0.96692 | +0.0103 |
+| 47 | **TabPFN only, with one 12,000-row-context bag in the all-days part** | — | **0.96703** | +0.0104 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
