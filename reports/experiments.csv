@@ -40,3 +40,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-09T00:07:21,blend_tabpfnall5_40_recent3_25_xgb35,,,,165.0,,0.96506,TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35
 2026-10-09T00:07:21,blend_tabpfn75_xgb25,,,,165.0,,0.9657,TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25
 2026-10-09T00:35:20,blend_tabpfn80_r23,,,,165.0,,0.96552,TabPFN all-days 6 bags .40 + days-18+ 3 bags .20 + days-23+ 1 bag .20 + xgboost .20
+2026-10-10T00:05:59,blend_tabpfn85_xgb15,,,,165.0,,0.96647,TabPFN all-days 6 bags .50 + days-18+ 3 bags .35 + xgboost .15
+2026-10-10T00:05:59,blend_tabpfn_only,,,,165.0,,0.96692,TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45

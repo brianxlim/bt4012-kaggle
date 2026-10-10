@@ -86,6 +86,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 42 | TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35 | — | 0.96506 | +0.0083 |
 | 43 | **TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25** | — | **0.96570** | +0.0090 |
 | 44 | TabPFN all 6 bags .40 + days-18+ .20 + days-23+ .20 + xgboost .20 | — | 0.96552 | +0.0089 |
+| 45 | TabPFN all 6 bags .50 + days-18+ .35 + xgboost .15 | — | 0.96647 | +0.0098 |
+| 46 | **TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45** | — | **0.96692** | +0.0103 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -660,3 +662,7 @@ mixed in at 25%, gave **0.96529**.
 
 More bags stopped helping after three (5 all-days bags: 0.96506, a tie). A larger
 TabPFN share keeps helping: .50 → .65 → .75 gave 0.96301 → 0.96389 → 0.96570.
+
+TabPFN share, end to end: .50 → .65 → .75 → .85 → 1.0 gave 0.96301 → 0.96389 →
+0.96570 → 0.96647 → **0.96692**. With enough bags (6 all-days + 3 days-18+),
+TabPFN alone beats every mix with xgboost.
