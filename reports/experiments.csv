@@ -43,3 +43,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-10T00:05:59,blend_tabpfn85_xgb15,,,,165.0,,0.96647,TabPFN all-days 6 bags .50 + days-18+ 3 bags .35 + xgboost .15
 2026-10-10T00:05:59,blend_tabpfn_only,,,,165.0,,0.96692,TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45
 2026-10-10T00:35:24,blend_tabpfn_only_ctx12k,,,,165.0,,0.96703,TabPFN only: all-days 8k 6 bags .35 + all-days 12k-context 1 bag .20 + days-18+ 3 bags .45; 12k vs 8k spearman 0.979
+2026-10-11T00:06:02,blend_tabpfn_recent55,,,,165.0,,0.96719,TabPFN only: all-days 8k 6 bags .30 + 12k 1 bag .15 + days-18+ 3 bags .55
+2026-10-11T00:06:02,blend_tabpfn_recent65,,,,165.0,,0.96732,TabPFN only: all-days 8k 6 bags .235 + 12k 1 bag .115 + days-18+ 3 bags .65
