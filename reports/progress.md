@@ -90,7 +90,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 46 | TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45 | — | 0.96692 | +0.0103 |
 | 47 | TabPFN only, with one 12,000-row-context bag in the all-days part | — | 0.96703 | +0.0104 |
 | 48 | TabPFN only, days-18+ share .55 | — | 0.96719 | +0.0106 |
-| 49 | **TabPFN only, days-18+ share .65** | — | **0.96732** | +0.0107 |
+| 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0107 |
+| 50 | **Same, with a 12,000-row-context days-18+ bag in the recent share** | — | **0.96805** | +0.0128 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -669,3 +670,7 @@ TabPFN share keeps helping: .50 → .65 → .75 gave 0.96301 → 0.96389 → 0.9
 TabPFN share, end to end: .50 → .65 → .75 → .85 → 1.0 gave 0.96301 → 0.96389 →
 0.96570 → 0.96647 → **0.96692**. With enough bags (6 all-days + 3 days-18+),
 TabPFN alone beats every mix with xgboost.
+
+A larger context helps most in the recent-days TabPFN: one 12,000-row-context
+days-18+ bag, given .25 of the .65 recent share, moved 0.96732 → **0.96805**.
+Days 18–35 hold 14,380 labelled rows, so the next step is to use all of them.
