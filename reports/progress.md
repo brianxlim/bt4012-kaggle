@@ -91,7 +91,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 47 | TabPFN only, with one 12,000-row-context bag in the all-days part | — | 0.96703 | +0.0104 |
 | 48 | TabPFN only, days-18+ share .55 | — | 0.96719 | +0.0106 |
 | 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0107 |
-| 50 | **Same, with a 12,000-row-context days-18+ bag in the recent share** | — | **0.96805** | +0.0128 |
+| 50 | Same, with a 12,000-row-context days-18+ bag in the recent share | — | 0.96805 | +0.0128 |
+| 51 | **Recent share .75 (8k .40 + 12k .35)** | — | **0.96825** | +0.0130 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
