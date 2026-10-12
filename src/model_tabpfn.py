@@ -29,7 +29,7 @@ from experiment import write_submission
 
 CONTEXT = int(os.environ.get("TABPFN_CONTEXT", 8000))  # rows of context per bag
 BAGS = 3
-ESTIMATORS = 2
+ESTIMATORS = int(os.environ.get("TABPFN_ESTIMATORS", 2))  # TabPFN's internal ensemble size
 CHUNK = 2000
 
 
