@@ -93,6 +93,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0107 |
 | 50 | Same, with a 12,000-row-context days-18+ bag in the recent share | — | 0.96805 | +0.0128 |
 | 51 | **Recent share .75 (8k .40 + 12k .35)** | — | **0.96825** | +0.0130 |
+| 52 | Recent share .75 split 8k / 12k / full-context .25 each | — | 0.96820 | +0.0130 |
+| 53 | Recent share .80, 12k + full context only (no 8k bags) | — | 0.96775 | +0.0125 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -675,3 +677,10 @@ TabPFN alone beats every mix with xgboost.
 A larger context helps most in the recent-days TabPFN: one 12,000-row-context
 days-18+ bag, given .25 of the .65 recent share, moved 0.96732 → **0.96805**.
 Days 18–35 hold 14,380 labelled rows, so the next step is to use all of them.
+
+Full 14,380-row context for days 18–35 adds nothing over 12,000 (Spearman 0.986
+between them; 0.96820, a tie). Dropping the 8,000-row recent bags lost 0.0005:
+the mix of context sizes is itself a source of useful diversity.
+
+Note: the container is reclaimed a few minutes after the session goes idle, so
+"overnight" TabPFN runs only progress while a session is active.
