@@ -51,3 +51,4 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-12T00:38:29,blend_tabpfn_recent80_big,,,,165.0,,0.96775,TabPFN only: all-days .20 + days-18+ 12k .40 + full .40 (no 8k recent bags)
 2026-10-13T00:07:45,blend_r75_12k2,,,,165.0,,0.96797,best blend with days-18+ 12k slot = 2 bags
 2026-10-13T00:07:45,blend_r75_12k_e4,,,,165.0,,0.96816,best blend with days-18+ 12k slot = bag0 + 4-estimator bag
+2026-10-13T00:29:40,blend_r75_d12,,,,165.0,,0.968,best blend with a days-12+ TabPFN bag taking .10 of the all-days share

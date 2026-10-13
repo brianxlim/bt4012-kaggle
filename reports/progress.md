@@ -97,6 +97,7 @@ No feature engineering, no external data, no graph features, no use of the
 | 53 | Recent share .80, 12k + full context only (no 8k bags) | — | 0.96775 | +0.0125 |
 | 54 | Best blend, 12k recent slot averaged over 2 bags | — | 0.96797 | +0.0128 |
 | 55 | Best blend, 12k recent slot = bag0 + 4-estimator bag | — | 0.96816 | +0.0130 |
+| 56 | Best blend with a days-12+ TabPFN bag in the all-days share | — | 0.96800 | +0.0128 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -690,3 +691,7 @@ Note: the container is reclaimed a few minutes after the session goes idle, so
 Re-weighting and adding more bags of the same TabPFN settings has plateaued at
 ~0.968 (0.96797–0.96825, all within public noise). A 4-estimator bag is no
 better than a 2-estimator one.
+
+A days-12+ window adds no new information either (Spearman 0.965–0.970 with the
+existing bags; 0.96800). Every TabPFN variant on 2026-10-12/13 landed between
+0.96775 and 0.96825.
