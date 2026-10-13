@@ -49,3 +49,5 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-12T00:04:50,blend_tabpfn_recent75_12k,,,,165.0,,0.96825,TabPFN only: all-days 8k .167 + all-days 12k .083 + days-18+ 8k 3 bags .40 + days-18+ 12k bag .35
 2026-10-12T00:38:29,blend_tabpfn_recent75_full,,,,165.0,,0.9682,"TabPFN only: all-days .25 + days-18+ 8k .25 + 12k .25 + full 14,380-row context .25; full vs 12k spearman 0.986"
 2026-10-12T00:38:29,blend_tabpfn_recent80_big,,,,165.0,,0.96775,TabPFN only: all-days .20 + days-18+ 12k .40 + full .40 (no 8k recent bags)
+2026-10-13T00:07:45,blend_r75_12k2,,,,165.0,,0.96797,best blend with days-18+ 12k slot = 2 bags
+2026-10-13T00:07:45,blend_r75_12k_e4,,,,165.0,,0.96816,best blend with days-18+ 12k slot = bag0 + 4-estimator bag

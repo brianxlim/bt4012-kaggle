@@ -95,6 +95,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 51 | **Recent share .75 (8k .40 + 12k .35)** | — | **0.96825** | +0.0130 |
 | 52 | Recent share .75 split 8k / 12k / full-context .25 each | — | 0.96820 | +0.0130 |
 | 53 | Recent share .80, 12k + full context only (no 8k bags) | — | 0.96775 | +0.0125 |
+| 54 | Best blend, 12k recent slot averaged over 2 bags | — | 0.96797 | +0.0128 |
+| 55 | Best blend, 12k recent slot = bag0 + 4-estimator bag | — | 0.96816 | +0.0130 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -684,3 +686,7 @@ the mix of context sizes is itself a source of useful diversity.
 
 Note: the container is reclaimed a few minutes after the session goes idle, so
 "overnight" TabPFN runs only progress while a session is active.
+
+Re-weighting and adding more bags of the same TabPFN settings has plateaued at
+~0.968 (0.96797–0.96825, all within public noise). A 4-estimator bag is no
+better than a 2-estimator one.
