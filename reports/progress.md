@@ -98,6 +98,8 @@ No feature engineering, no external data, no graph features, no use of the
 | 54 | Best blend, 12k recent slot averaged over 2 bags | — | 0.96797 | +0.0128 |
 | 55 | Best blend, 12k recent slot = bag0 + 4-estimator bag | — | 0.96816 | +0.0130 |
 | 56 | Best blend with a days-12+ TabPFN bag in the all-days share | — | 0.96800 | +0.0128 |
+| 57 | Best blend .85 + CatBoost (days 18+) .15 | — | 0.96712 | +0.0119 |
+| 58 | Best blend .85 + CatBoost (all days) .15 | — | 0.96708 | +0.0119 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -695,3 +697,13 @@ better than a 2-estimator one.
 A days-12+ window adds no new information either (Spearman 0.965–0.970 with the
 existing bags; 0.96800). Every TabPFN variant on 2026-10-12/13 landed between
 0.96775 and 0.96825.
+
+---
+
+## 21. CatBoost as a partner to TabPFN — loses
+
+CatBoost ranks test rows differently from the best TabPFN blend (Spearman
+0.73–0.75), but at a 15% share it cost 0.0011 either way (all days 0.96708,
+days 18+ 0.96712). Like xgboost and LightGBM, it is too weak next to TabPFN to
+add anything. The model of record stays the TabPFN-only blend at **0.96825**
+(`submissions/blend_tabpfn_recent75_12k.csv`).
