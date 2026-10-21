@@ -31,6 +31,28 @@ CONTEXT = int(os.environ.get("TABPFN_CONTEXT", 8000))  # rows of context per bag
 BAGS = 3
 ESTIMATORS = int(os.environ.get("TABPFN_ESTIMATORS", 2))  # TabPFN's internal ensemble size
 CHUNK = int(os.environ.get("TABPFN_CHUNK", 2000))  # test rows per forward pass
+# Pretrained weights, e.g. "v2_6", "v3" or "v3_5", or "tabicl" for TabICLv2 instead of TabPFN;
+# unset keeps the package default and the old file names.
+VERSION = os.environ.get("TABPFN_VERSION", "")
+CHECKPOINT = os.environ.get("TABPFN_CKPT", "")  # a specific checkpoint file of that version
+# Encode the context once and reuse it for every test chunk, instead of once per chunk.
+CACHED = os.environ.get("TABPFN_CACHED", "") == "1"
+
+
+def make_model(bag):
+    if VERSION == "tabicl":
+        from tabicl import TabICLClassifier
+        return TabICLClassifier(n_estimators=ESTIMATORS, device=pick_device(), random_state=bag,
+                                batch_size=int(os.environ.get("TABICL_BATCH", 2)))
+    kwargs = dict(device=pick_device(), n_estimators=ESTIMATORS, random_state=bag, ignore_pretraining_limits=True)
+    if CACHED:
+        kwargs.update(fit_mode="fit_with_cache", kv_cache_precision=None)
+    if not VERSION:
+        return TabPFNClassifier(**kwargs)
+    from tabpfn.constants import ModelVersion
+    if CHECKPOINT:
+        kwargs["model_path"] = CHECKPOINT
+    return TabPFNClassifier.create_default_for_version(ModelVersion(VERSION.replace("_", ".")), **kwargs)
 
 
 def pick_device():
@@ -45,7 +67,17 @@ def pick_device():
     return "cpu"
 
 
+def load_env():
+    """TABPFN_TOKEN from .env, so TabPFN never falls back to a browser login."""
+    path = Path(__file__).resolve().parents[1] / ".env"
+    for line in path.read_text().splitlines() if path.exists() else []:
+        if "=" in line and not line.lstrip().startswith("#"):
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
 def main():
+    load_env()
     first_day, bag_from, bag_to, tag = 1, 0, BAGS, ""
     if len(sys.argv) > 1:
         first_day, bag_from, bag_to, tag = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
@@ -56,14 +88,16 @@ def main():
     Xt = test[FEATURES].to_numpy()
     total = np.zeros(len(test))
     prefix = f"tabpfn_{tag}_" if tag and tag != "all" else "tabpfn_"
+    if VERSION:
+        family = "tabicl" if VERSION == "tabicl" else f"tabpfn{VERSION.replace('_', '').replace('.', '')}"
+        prefix = prefix.replace("tabpfn_", f"{family}_", 1)
     for bag in range(bag_from, bag_to):
         out = SUBMISSIONS.parent / "cache" / f"{prefix}bag{bag}.npy"
         if not out.exists():
             rng = np.random.default_rng(bag)
             take = min(len(licit), CONTEXT - len(illicit))
             rows = np.r_[illicit, rng.choice(licit, take, replace=False)]
-            model = TabPFNClassifier(device=pick_device(), n_estimators=ESTIMATORS, random_state=bag,
-                                     ignore_pretraining_limits=True)
+            model = make_model(bag)
             model.fit(labelled.loc[rows, FEATURES].to_numpy(), y[rows])
             parts = []
             for i in range(0, len(Xt), CHUNK):

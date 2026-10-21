@@ -3,5 +3,7 @@
 __pycache__/
 cache/
 data/
-.DS_Storecatboost_info/
+.DS_Store
+catboost_info/
 logs/
+.claude/
