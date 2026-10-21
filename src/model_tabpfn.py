@@ -37,6 +37,9 @@ VERSION = os.environ.get("TABPFN_VERSION", "")
 CHECKPOINT = os.environ.get("TABPFN_CKPT", "")  # a specific checkpoint file of that version
 # Encode the context once and reuse it for every test chunk, instead of once per chunk.
 CACHED = os.environ.get("TABPFN_CACHED", "") == "1"
+# Comma-separated features to leave out, e.g. the time markers feat_100,feat_101,feat_103
+DROP = [f for f in os.environ.get("TABPFN_DROP", "").split(",") if f]
+USED = [f for f in FEATURES if f not in DROP]
 
 
 def make_model(bag):
@@ -85,7 +88,7 @@ def main():
     labelled = labelled[labelled["time_step"] >= first_day].reset_index(drop=True)
     y = labelled["label"].to_numpy()
     illicit, licit = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
-    Xt = test[FEATURES].to_numpy()
+    Xt = test[USED].to_numpy()
     total = np.zeros(len(test))
     prefix = f"tabpfn_{tag}_" if tag and tag != "all" else "tabpfn_"
     if VERSION:
@@ -98,7 +101,7 @@ def main():
             take = min(len(licit), CONTEXT - len(illicit))
             rows = np.r_[illicit, rng.choice(licit, take, replace=False)]
             model = make_model(bag)
-            model.fit(labelled.loc[rows, FEATURES].to_numpy(), y[rows])
+            model.fit(labelled.loc[rows, USED].to_numpy(), y[rows])
             parts = []
             for i in range(0, len(Xt), CHUNK):
                 # each chunk is saved, so a stopped run resumes where it left off
@@ -113,7 +116,7 @@ def main():
         print(f"  bag {bag} done", flush=True)
     name = f"{prefix}bags{bag_from}-{bag_to - 1}" if tag else "tabpfn_bag3"
     path = write_submission(total / (bag_to - bag_from), name)
-    best = pd.read_csv(SUBMISSIONS / "blend4_full40_d23_d18_d12.csv")["target"]
+    best = pd.read_csv(SUBMISSIONS / "blend_tabpfn_recent75_12k.csv")["target"]
     print(f"  spearman vs best {pd.Series(total).corr(best, method='spearman'):.3f} -> {path.name}")
 
 
