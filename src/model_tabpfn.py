@@ -40,6 +40,9 @@ CACHED = os.environ.get("TABPFN_CACHED", "") == "1"
 # Comma-separated features to leave out, e.g. the time markers feat_100,feat_101,feat_103
 DROP = [f for f in os.environ.get("TABPFN_DROP", "").split(",") if f]
 USED = [f for f in FEATURES if f not in DROP]
+# Clip each test feature to the bag's context range. The time-marker features
+# (feat_100/101/103) are out of range for >99% of test rows and pull scores up with test day.
+CLIP = os.environ.get("TABPFN_CLIP", "") == "1"
 
 
 def make_model(bag):
@@ -101,14 +104,16 @@ def main():
             take = min(len(licit), CONTEXT - len(illicit))
             rows = np.r_[illicit, rng.choice(licit, take, replace=False)]
             model = make_model(bag)
-            model.fit(labelled.loc[rows, USED].to_numpy(), y[rows])
+            context = labelled.loc[rows, USED].to_numpy()
+            model.fit(context, y[rows])
+            Xb = np.clip(Xt, context.min(axis=0), context.max(axis=0)) if CLIP else Xt
             parts = []
             for i in range(0, len(Xt), CHUNK):
                 # each chunk is saved, so a stopped run resumes where it left off
                 chunk_path = out.with_name(f"{out.stem}_{i}.npy")
                 if not chunk_path.exists():
                     start = time.time()
-                    np.save(chunk_path, model.predict_proba(Xt[i:i + CHUNK])[:, 1])
+                    np.save(chunk_path, model.predict_proba(Xb[i:i + CHUNK])[:, 1])
                     print(f"  bag {bag} rows {i}-{i + CHUNK} in {time.time() - start:.0f}s", flush=True)
                 parts.append(np.load(chunk_path))
             np.save(out, np.concatenate(parts))
