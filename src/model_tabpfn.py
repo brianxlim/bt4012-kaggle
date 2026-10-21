@@ -13,6 +13,7 @@ the same rows (0.9978 vs 0.9955). Needs TABPFN_TOKEN (licence at priorlabs.ai).
     python src/model_tabpfn.py 1 3 6 all       # all days, bags 3-5
 """
 
+import os
 import sys
 import time
 from pathlib import Path
@@ -26,10 +27,22 @@ from tabpfn import TabPFNClassifier
 from data import FEATURES, SUBMISSIONS, load_labelled, load_test
 from experiment import write_submission
 
-CONTEXT = 8000
+CONTEXT = int(os.environ.get("TABPFN_CONTEXT", 8000))  # rows of context per bag
 BAGS = 3
-ESTIMATORS = 2
-CHUNK = 2000
+ESTIMATORS = int(os.environ.get("TABPFN_ESTIMATORS", 2))  # TabPFN's internal ensemble size
+CHUNK = int(os.environ.get("TABPFN_CHUNK", 2000))  # test rows per forward pass
+
+
+def pick_device():
+    """TABPFN_DEVICE if set, else an NVIDIA GPU, else Apple Silicon, else CPU."""
+    if os.environ.get("TABPFN_DEVICE"):
+        return os.environ["TABPFN_DEVICE"]
+    import torch
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def main():
@@ -49,7 +62,7 @@ def main():
             rng = np.random.default_rng(bag)
             take = min(len(licit), CONTEXT - len(illicit))
             rows = np.r_[illicit, rng.choice(licit, take, replace=False)]
-            model = TabPFNClassifier(device="cpu", n_estimators=ESTIMATORS, random_state=bag,
+            model = TabPFNClassifier(device=pick_device(), n_estimators=ESTIMATORS, random_state=bag,
                                      ignore_pretraining_limits=True)
             model.fit(labelled.loc[rows, FEATURES].to_numpy(), y[rows])
             parts = []

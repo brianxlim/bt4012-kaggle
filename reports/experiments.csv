@@ -34,3 +34,23 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-07T07:01:11,tabpfn_bag0,,,,165.0,,0.96026,"TabPFN alone, 1 bag: all illicit + sampled licit = 8,000 context rows, n_estimators 2; spearman 0.846 vs best xgb blend"
 2026-10-07T07:01:11,blend_tabpfn50_xgb50,,,,165.0,,0.96149,50/50 rank-average TabPFN bag0 + best xgboost 4-way window blend
 2026-10-07T07:34:58,blend_tabpfn3bag50_xgb50,,,,165.0,,0.96301,50/50 rank-average TabPFN 3 bags + best xgboost 4-way window blend
+2026-10-08T00:05:16,blend_tabpfn3bag65_xgb35,,,,165.0,,0.96389,rank-average TabPFN 3 bags 0.65 + best xgboost 4-way window blend 0.35
+2026-10-08T00:10:37,blend_tabpfnall40_recent25_xgb35,,,,165.0,,0.96529,TabPFN all-days 3 bags .40 + TabPFN context from days 18+ (1 bag) .25 + xgboost window blend .35; recent18 vs all-days TabPFN spearman 0.95
+2026-10-08T00:38:23,blend_tabpfnall30_recent35_xgb35,,,,165.0,,0.96519,TabPFN all-days 3 bags .30 + TabPFN days-18+ 3 bags .35 + xgboost window blend .35
+2026-10-09T00:07:21,blend_tabpfnall5_40_recent3_25_xgb35,,,,165.0,,0.96506,TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35
+2026-10-09T00:07:21,blend_tabpfn75_xgb25,,,,165.0,,0.9657,TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25
+2026-10-09T00:35:20,blend_tabpfn80_r23,,,,165.0,,0.96552,TabPFN all-days 6 bags .40 + days-18+ 3 bags .20 + days-23+ 1 bag .20 + xgboost .20
+2026-10-10T00:05:59,blend_tabpfn85_xgb15,,,,165.0,,0.96647,TabPFN all-days 6 bags .50 + days-18+ 3 bags .35 + xgboost .15
+2026-10-10T00:05:59,blend_tabpfn_only,,,,165.0,,0.96692,TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45
+2026-10-10T00:35:24,blend_tabpfn_only_ctx12k,,,,165.0,,0.96703,TabPFN only: all-days 8k 6 bags .35 + all-days 12k-context 1 bag .20 + days-18+ 3 bags .45; 12k vs 8k spearman 0.979
+2026-10-11T00:06:02,blend_tabpfn_recent55,,,,165.0,,0.96719,TabPFN only: all-days 8k 6 bags .30 + 12k 1 bag .15 + days-18+ 3 bags .55
+2026-10-11T00:06:02,blend_tabpfn_recent65,,,,165.0,,0.96732,TabPFN only: all-days 8k 6 bags .235 + 12k 1 bag .115 + days-18+ 3 bags .65
+2026-10-11T00:34:35,blend_tabpfn_recent65_12k,,,,165.0,,0.96805,TabPFN only: all-days 8k 6 bags .235 + all-days 12k .115 + days-18+ 8k 3 bags .40 + days-18+ 12k-context bag0 .25; recent 12k vs 8k spearman 0.967
+2026-10-12T00:04:50,blend_tabpfn_recent75_12k,,,,165.0,,0.96825,TabPFN only: all-days 8k .167 + all-days 12k .083 + days-18+ 8k 3 bags .40 + days-18+ 12k bag .35
+2026-10-12T00:38:29,blend_tabpfn_recent75_full,,,,165.0,,0.9682,"TabPFN only: all-days .25 + days-18+ 8k .25 + 12k .25 + full 14,380-row context .25; full vs 12k spearman 0.986"
+2026-10-12T00:38:29,blend_tabpfn_recent80_big,,,,165.0,,0.96775,TabPFN only: all-days .20 + days-18+ 12k .40 + full .40 (no 8k recent bags)
+2026-10-13T00:07:45,blend_r75_12k2,,,,165.0,,0.96797,best blend with days-18+ 12k slot = 2 bags
+2026-10-13T00:07:45,blend_r75_12k_e4,,,,165.0,,0.96816,best blend with days-18+ 12k slot = bag0 + 4-estimator bag
+2026-10-13T00:29:40,blend_r75_d12,,,,165.0,,0.968,best blend with a days-12+ TabPFN bag taking .10 of the all-days share
+2026-10-14T00:05:35,blend_catr15,,,,165.0,,0.96712,best TabPFN blend .85 + CatBoost days-18+ .15
+2026-10-14T00:05:35,blend_cat15,,,,165.0,,0.96708,best TabPFN blend .85 + CatBoost all days .15

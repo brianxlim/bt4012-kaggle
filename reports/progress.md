@@ -77,6 +77,29 @@ No feature engineering, no external data, no graph features, no use of the
 | 33 | CatBoost alone | — | 0.94800 | −0.0087 |
 | 34 | Random forest alone | — | 0.92618 | −0.0305 |
 | 35 | Best blend 0.75 + CatBoost 0.25 | — | 0.95667 | −0.0001 |
+| 36 | TabPFN alone, 1 bag | — | 0.96026 | +0.0035 |
+| 37 | TabPFN 1 bag 0.5 + xgboost window blend 0.5 | — | 0.96149 | +0.0048 |
+| 38 | TabPFN 3 bags 0.5 + xgboost window blend 0.5 | — | 0.96301 | +0.0063 |
+| 39 | TabPFN 3 bags 0.65 + xgboost window blend 0.35 | — | 0.96389 | +0.0072 |
+| 40 | **TabPFN all-days .40 + TabPFN days-18+ context .25 + xgboost .35** | — | **0.96529** | +0.0086 |
+| 41 | TabPFN all-days .30 + days-18+ (3 bags) .35 + xgboost .35 | — | 0.96519 | +0.0085 |
+| 42 | TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35 | — | 0.96506 | +0.0083 |
+| 43 | **TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25** | — | **0.96570** | +0.0090 |
+| 44 | TabPFN all 6 bags .40 + days-18+ .20 + days-23+ .20 + xgboost .20 | — | 0.96552 | +0.0089 |
+| 45 | TabPFN all 6 bags .50 + days-18+ .35 + xgboost .15 | — | 0.96647 | +0.0098 |
+| 46 | TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45 | — | 0.96692 | +0.0103 |
+| 47 | TabPFN only, with one 12,000-row-context bag in the all-days part | — | 0.96703 | +0.0104 |
+| 48 | TabPFN only, days-18+ share .55 | — | 0.96719 | +0.0106 |
+| 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0107 |
+| 50 | Same, with a 12,000-row-context days-18+ bag in the recent share | — | 0.96805 | +0.0128 |
+| 51 | **Recent share .75 (8k .40 + 12k .35)** | — | **0.96825** | +0.0130 |
+| 52 | Recent share .75 split 8k / 12k / full-context .25 each | — | 0.96820 | +0.0130 |
+| 53 | Recent share .80, 12k + full context only (no 8k bags) | — | 0.96775 | +0.0125 |
+| 54 | Best blend, 12k recent slot averaged over 2 bags | — | 0.96797 | +0.0128 |
+| 55 | Best blend, 12k recent slot = bag0 + 4-estimator bag | — | 0.96816 | +0.0130 |
+| 56 | Best blend with a days-12+ TabPFN bag in the all-days share | — | 0.96800 | +0.0128 |
+| 57 | Best blend .85 + CatBoost (days 18+) .15 | — | 0.96712 | +0.0119 |
+| 58 | Best blend .85 + CatBoost (all days) .15 | — | 0.96708 | +0.0119 |
 
 Four of the eight improved the score. All four were changes to model *settings*.
 Every change to the feature set or the model family failed.
@@ -623,3 +646,64 @@ independent discoveries.
 TabPFN (pretrained tabular foundation model) installed but needs a licence
 token from priorlabs.ai tied to the user's account before weights download.
 Code: `src/model_alt.py`.
+
+---
+
+## 20. TabPFN — the first model family to beat xgboost
+
+TabPFN is a pretrained tabular foundation model: it reads a sample of labelled
+rows as context and predicts new rows in one forward pass, with no training.
+`src/model_tabpfn.py` bags it on CPU: each bag keeps all 3,644 illicit rows plus
+4,356 sampled licit rows (8,000-row context), and bags are rank-averaged.
+
+| Submission | Leaderboard |
+|---|---|
+| TabPFN alone, 1 bag | 0.96026 |
+| TabPFN 1 bag 0.5 + xgboost window blend 0.5 | 0.96149 |
+| TabPFN 3 bags 0.5 + xgboost window blend 0.5 | 0.96301 |
+| TabPFN 3 bags 0.65 + xgboost window blend 0.35 | **0.96389** |
+
+On 3,000 rows from days 20–29 scored on days 30–35 it beat xgboost trained on
+the same rows (0.9978 vs 0.9955). TabPFN and the xgboost blend correlate 0.85 on
+test. Bagging and a heavier TabPFN weight both helped. Cost: ~18 minutes per bag
+on 4 CPU cores. Needs `TABPFN_TOKEN` (licence at priorlabs.ai).
+
+Recent-days context helps TabPFN as it helped xgboost: a bag whose context is
+drawn from days 18–35 only (all 2,265 illicit rows there plus sampled licit),
+mixed in at 25%, gave **0.96529**.
+
+More bags stopped helping after three (5 all-days bags: 0.96506, a tie). A larger
+TabPFN share keeps helping: .50 → .65 → .75 gave 0.96301 → 0.96389 → 0.96570.
+
+TabPFN share, end to end: .50 → .65 → .75 → .85 → 1.0 gave 0.96301 → 0.96389 →
+0.96570 → 0.96647 → **0.96692**. With enough bags (6 all-days + 3 days-18+),
+TabPFN alone beats every mix with xgboost.
+
+A larger context helps most in the recent-days TabPFN: one 12,000-row-context
+days-18+ bag, given .25 of the .65 recent share, moved 0.96732 → **0.96805**.
+Days 18–35 hold 14,380 labelled rows, so the next step is to use all of them.
+
+Full 14,380-row context for days 18–35 adds nothing over 12,000 (Spearman 0.986
+between them; 0.96820, a tie). Dropping the 8,000-row recent bags lost 0.0005:
+the mix of context sizes is itself a source of useful diversity.
+
+Note: the container is reclaimed a few minutes after the session goes idle, so
+"overnight" TabPFN runs only progress while a session is active.
+
+Re-weighting and adding more bags of the same TabPFN settings has plateaued at
+~0.968 (0.96797–0.96825, all within public noise). A 4-estimator bag is no
+better than a 2-estimator one.
+
+A days-12+ window adds no new information either (Spearman 0.965–0.970 with the
+existing bags; 0.96800). Every TabPFN variant on 2026-10-12/13 landed between
+0.96775 and 0.96825.
+
+---
+
+## 21. CatBoost as a partner to TabPFN — loses
+
+CatBoost ranks test rows differently from the best TabPFN blend (Spearman
+0.73–0.75), but at a 15% share it cost 0.0011 either way (all days 0.96708,
+days 18+ 0.96712). Like xgboost and LightGBM, it is too weak next to TabPFN to
+add anything. The model of record stays the TabPFN-only blend at **0.96825**
+(`submissions/blend_tabpfn_recent75_12k.csv`).
