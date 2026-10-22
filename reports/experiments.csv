@@ -57,3 +57,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-21T15:09:05,blend_r75_tabicl20,,,,165.0,,0.96799,best TabPFN blend .80 + TabICLv2 days-18+ full context .20; TabICL spearman 0.934 vs best
 2026-10-21T15:09:12,blend_r75_tabicl35,,,,165.0,,0.96629,best TabPFN blend .65 + TabICLv2 days-18+ full .175 + all-days full .175
 2026-10-21T15:27:59,blend_r75_v3trio25,,,,165.0,,0.96701,best TabPFN blend .75 + TabPFN v3 default/binary/ood checkpoints (days-18+ 12k) .25; v3 spearman 0.87-0.91 vs best
+2026-10-22T00:07:20,blend_r75_b43_m05,,,,165.0,,0.96714,best TabPFN blend with days 43-49 pooled pct rank shifted -0.05 (src/blockshift.py)
+2026-10-22T00:08:24,blend_r75_b43_p05,,,,165.0,,0.95519,best TabPFN blend with days 43-49 pooled pct rank shifted +0.05
+2026-10-22T00:09:33,blend_r75_b43_m02,,,,165.0,,0.96805,best TabPFN blend with days 43-49 pooled pct rank shifted -0.02; optimum at ~0
