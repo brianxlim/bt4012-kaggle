@@ -3,22 +3,50 @@
 BT4012 Kaggle competition `bt-4012-competition-2026` — detecting illicit Bitcoin
 transactions in the Elliptic dataset, scored by ROC AUC.
 
-**Standing: 1st place, public score 0.95521.** Eight submissions.
-Last updated 2026-09-17.
+**Standing: 3rd place, public score 0.97162** (evening of 2026-10-23; leader
+0.97446, 2nd 0.97190). 67 submissions. Model of record: TabPFN blend .75 +
+NVIDIA Kumo Tabular .25. The xgboost model below was 1st on 2026-09-17 at 0.95521.
+Last updated 2026-10-23.
 
 ---
 
 ## 1. Result
 
+Standing on 2026-10-23, public leaderboard:
+
 | | Public score |
 |---|---|
-| **This model** | **0.95521** |
+| Leader | 0.97446 |
+| 2nd place | 0.97190 |
+| **This model (TabPFN + Kumo blend)** | **0.97162** |
+| Previous model of record (TabPFN-only blend) | 0.96825 |
+| Earlier model of record (xgboost, 2026-09-17) | 0.95521 |
+| Organisers' baseline | 0.92119 |
+
+The model of record is `submissions/blend_r75_kumo25.csv`, a rank-average of two
+parts. Both are pretrained tabular models used in-context, with no training on
+this data: they read a sample of labelled rows and score the test rows.
+
+| Part | Weight | What it is |
+|---|---|---|
+| Best TabPFN blend (`blend_tabpfn_recent75_12k.csv`) | .75 | TabPFN v3.5 bags: all-days 8k × 6 bags .167, all-days 12k .083, days-18+ 8k × 3 bags .40, days-18+ 12k .35 |
+| Kumo component (`kumo_blend.csv`) | .25 | NVIDIA Kumo Tabular large, 12 runs: days-18+ 8k × 5 and 14k, all-days 12k × 5 and 31k |
+
+It scored 0.97162, +0.0034 over the TabPFN-only blend. §27 has the Kumo result
+and §28 what is left. Final selections on Kaggle (set 2026-10-23):
+`blend_r75_kumo25.csv` and `blend_tabpfn_recent75_12k.csv`.
+
+On 2026-09-17 the model of record was the xgboost model below, and it was 1st:
+
+| | Public score, 2026-09-17 |
+|---|---|
+| **xgboost model** | **0.95521** |
 | 2nd place | 0.95357 |
 | 3rd place | 0.95085 |
 | Organisers' baseline | 0.92119 |
 
-The final model is gradient-boosted decision trees (XGBoost) on the 165 supplied
-features, labelled rows only, five random seeds rank-averaged.
+That earlier model is gradient-boosted decision trees (XGBoost) on the 165
+supplied features, labelled rows only, five random seeds rank-averaged.
 `src/model_tuned.py`.
 
 | Setting | Value |
@@ -34,7 +62,9 @@ features, labelled rows only, five random seeds rank-averaged.
 | seeds | 5, rank-averaged |
 
 No feature engineering, no external data, no graph features, no use of the
-110,537 unlabelled rows. Every one of those was tried and none helped.
+110,537 unlabelled rows. Every one of those was tried and none helped. The
+current model adds none of them either. It uses the 165 supplied features and the
+labelled rows; the only outside ingredient is the pretrained weights.
 
 ---
 
@@ -85,12 +115,12 @@ No feature engineering, no external data, no graph features, no use of the
 | 41 | TabPFN all-days .30 + days-18+ (3 bags) .35 + xgboost .35 | — | 0.96519 | +0.0085 |
 | 42 | TabPFN all-days 5 bags .40 + days-18+ 3 bags .25 + xgboost .35 | — | 0.96506 | +0.0083 |
 | 43 | **TabPFN all-days 5 bags .45 + days-18+ 3 bags .30 + xgboost .25** | — | **0.96570** | +0.0090 |
-| 44 | TabPFN all 6 bags .40 + days-18+ .20 + days-23+ .20 + xgboost .20 | — | 0.96552 | +0.0089 |
+| 44 | TabPFN all 6 bags .40 + days-18+ .20 + days-23+ .20 + xgboost .20 | — | 0.96552 | +0.0088 |
 | 45 | TabPFN all 6 bags .50 + days-18+ .35 + xgboost .15 | — | 0.96647 | +0.0098 |
-| 46 | TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45 | — | 0.96692 | +0.0103 |
-| 47 | TabPFN only, with one 12,000-row-context bag in the all-days part | — | 0.96703 | +0.0104 |
-| 48 | TabPFN only, days-18+ share .55 | — | 0.96719 | +0.0106 |
-| 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0107 |
+| 46 | TabPFN only: all-days 6 bags .55 + days-18+ 3 bags .45 | — | 0.96692 | +0.0102 |
+| 47 | TabPFN only, with one 12,000-row-context bag in the all-days part | — | 0.96703 | +0.0103 |
+| 48 | TabPFN only, days-18+ share .55 | — | 0.96719 | +0.0105 |
+| 49 | TabPFN only, days-18+ share .65 | — | 0.96732 | +0.0106 |
 | 50 | Same, with a 12,000-row-context days-18+ bag in the recent share | — | 0.96805 | +0.0128 |
 | 51 | **Recent share .75 (8k .40 + 12k .35)** | — | **0.96825** | +0.0130 |
 | 52 | Recent share .75 split 8k / 12k / full-context .25 each | — | 0.96820 | +0.0130 |
@@ -100,9 +130,25 @@ No feature engineering, no external data, no graph features, no use of the
 | 56 | Best blend with a days-12+ TabPFN bag in the all-days share | — | 0.96800 | +0.0128 |
 | 57 | Best blend .85 + CatBoost (days 18+) .15 | — | 0.96712 | +0.0119 |
 | 58 | Best blend .85 + CatBoost (all days) .15 | — | 0.96708 | +0.0119 |
+| 59 | Best TabPFN blend .80 + TabICLv2 (days-18+, full context) .20 | — | 0.96799 | +0.0128 |
+| 60 | Best TabPFN blend .65 + TabICLv2 days-18+ full .175 + all-days full .175 | — | 0.96629 | +0.0111 |
+| 61 | Best TabPFN blend .75 + three TabPFN v3 checkpoints (days-18+ 12k) .25 | — | 0.96701 | +0.0118 |
+| 62 | Best blend, days 43–49 pooled rank shifted −0.05 | — | 0.96714 | +0.0119 |
+| 63 | Best blend, days 43–49 pooled rank shifted +0.05 | — | 0.95519 | −0.0000 |
+| 64 | Best blend, days 43–49 pooled rank shifted −0.02 | — | 0.96805 | +0.0128 |
+| 65 | Best-blend recipe rebuilt with 8 TabPFN estimators per bag | — | 0.96694 | +0.0117 |
+| 66 | Best-blend recipe rebuilt without the six time-marker features | — | 0.96402 | +0.0088 |
+| 67 | **Best TabPFN blend .75 + NVIDIA Kumo Tabular .25** | — | **0.97162** | **+0.0164** |
 
-Four of the eight improved the score. All four were changes to model *settings*.
-Every change to the feature set or the model family failed.
+Of the first eight submissions, four improved the score. All four were changes to
+model *settings*. Every change to the feature set or the model family failed.
+
+From row 50 on, Δ is against the xgboost model of record, 0.95521. That flatters
+every row that lost to the TabPFN blend: row 63 reads −0.0000 and cost 0.0131.
+Against the best TabPFN blend (0.96825) rows 59–66 are −0.0003, −0.0020, −0.0012,
+−0.0011, −0.0131, −0.0002, −0.0013 and −0.0042, and row 67 is **+0.0034**. Rows
+59–67 are the last nine rows of `reports/experiments.csv`, which does not hold
+rows 4–6.
 
 The transfer ratio is shrinking as the model gets stronger: +0.0114→+0.0061,
 +0.0090→+0.0052, +0.0115→+0.0019. Offline settings gains are still directionally
@@ -706,4 +752,300 @@ CatBoost ranks test rows differently from the best TabPFN blend (Spearman
 0.73–0.75), but at a 15% share it cost 0.0011 either way (all days 0.96708,
 days 18+ 0.96712). Like xgboost and LightGBM, it is too weak next to TabPFN to
 add anything. The model of record stays the TabPFN-only blend at **0.96825**
-(`submissions/blend_tabpfn_recent75_12k.csv`).
+(`submissions/blend_tabpfn_recent75_12k.csv`). Superseded on 2026-10-23, see §27.
+
+---
+
+## 22. 2026-10-21 — a GPU machine, and the old bags were already v3.5
+
+Work moved to a Windows 11 PC with an NVIDIA RTX 3060 Ti (8 GB). TabPFN bags that
+took ~18 minutes on 4 CPU cores (§20) now take a few minutes.
+
+| Item | Setting |
+|---|---|
+| Python | 3.11 |
+| `.venv` | `--system-site-packages`, system torch 2.5.1+cu124, packages installed unpinned |
+| TabPFN | `tabpfn` 9.2.0, default weights TabPFN v3.5 |
+| TabICLv2 | `tabicl` 2.2.0 |
+| `.venv-fm` (gitignored) | torch 2.11.0+cu128, `structured-data-models` 0.2.1 (Kumo Tabular), `huggingface_hub` 2.2.0 |
+
+The pinned `requirements.txt` does not install on Python 3.11: `numpy==2.5.3`
+needs a newer Python. Everything from 2026-10-21 on ran in the unpinned
+environments above.
+
+**Weights and licences.** TabPFN v3, v2.6 and v2.5 weights need a one-time
+licence acceptance at `ux.priorlabs.ai/account/licenses`. v3.5 worked with the
+existing `TABPFN_TOKEN`. Kumo weights come from Hugging Face, `nvidia/Kumo-Tabular`
+(revision v1.0.1, `large`, ~855 MB), under the OpenMDW 1.1 licence, not gated.
+
+**Code.** `src/model_tabpfn.py` now takes its settings from environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `TABPFN_CONTEXT` | Rows per bag, default 8000. 99999 means all rows from the first day |
+| `TABPFN_ESTIMATORS` | Internal estimators per bag, default 2 |
+| `TABPFN_CHUNK` | Test rows per predict call, default 2000 |
+| `TABPFN_VERSION` | `v2_5`, `v2_6`, `v3`, `v3_5` or `tabicl` (TabICLv2). Unset keeps the package default and the old file names |
+| `TABPFN_CKPT` | A specific checkpoint file of that version |
+| `TABPFN_CACHED=1` | `fit_with_cache`. Runs out of memory at 14k context or more on 8 GB |
+| `TABPFN_DROP` | Comma-separated features to leave out |
+| `TABPFN_CLIP=1` | Clip test features to the bag's context range |
+| `TABICL_BATCH` | TabICL batch size, default 2 |
+| `TABPFN_DEVICE` | Force a device instead of auto-detecting |
+
+Output files are named `tabpfn{version}_{tag}_bags{a}-{b}.csv`. `src/blockshift.py`
+(§24) and `src/fm/` (§27) are new.
+
+### 22.1 The rebuild check
+
+A rebuild of the days-18+ 8k 3-bag set with v3.5 on the GPU, compared with the
+old bags:
+
+| Comparison | Spearman on test |
+|---|---|
+| GPU v3.5 rebuild vs the old days-18+ 8k bags | 0.997 |
+| Same bag, GPU vs CPU | 0.989 |
+
+Two consequences:
+
+- **The earlier runs were already TabPFN v3.5**, the package default. There was no
+  free gain from upgrading. What had never been run was every other set of
+  weights, which is §23.
+- **0.989 is the floor for "same recipe".** One bag run on two devices already
+  differs by that much, so a variant that correlates 0.99 with its baseline is
+  indistinguishable from device noise.
+
+### 22.2 Run times on the RTX 3060 Ti
+
+| Run | Time |
+|---|---|
+| TabPFN v3.5, 8k bag, 2 estimators | ~3.5 min |
+| TabPFN v3.5, 12k bag | ~5–8 min |
+| TabPFN, 8 estimators | ~4× the 2-estimator time |
+| TabPFN v3.5, full 31,235-row context (non-cached, chunk 1000) | 26 min |
+| TabICLv2, full context | 1–3 min |
+| Kumo Tabular large, 8k context | ~2 min |
+| Kumo Tabular large, 31k context | 18 min |
+
+---
+
+## 23. 2026-10-21 — other foundation models as TabPFN partners
+
+CatBoost lost as a partner to TabPFN (§21), and xgboost's share in the best mix
+had already shrunk to zero (§20). The open question was whether another
+pretrained tabular model, or other TabPFN weights, could do what they could not. Three submissions, each added to the best TabPFN blend:
+
+| # | Partner | Share | Spearman vs best | Public score | vs 0.96825 |
+|---|---|---|---|---|---|
+| 59 | TabICLv2, days-18+ full context | .20 | 0.934 | 0.96799 | −0.0003 |
+| 60 | TabICLv2, days-18+ full .175 + all-days full .175 | .35 | 0.92–0.93 | 0.96629 | −0.0020 |
+| 61 | TabPFN v3: default, binary and ood checkpoints (days-18+ 12k) | .25 | 0.87–0.91 | 0.96701 | −0.0012 |
+
+TabICLv2 at 20% is a tie inside the noise of §13. At 35% it costs 0.0020. The v3
+checkpoints rank the test rows differently from the best blend (0.87–0.91) and
+still lose, so lower correlation alone was not enough.
+
+Two more candidates did not finish on 8 GB:
+
+| Model | What happened |
+|---|---|
+| TabPFN v2.6, 12k context | 573 s per 2000-row chunk (memory thrashing). Killed |
+| LimiX-2 (`stable-ai/LimiX-2`, 400M parameters, non-commercial licence) | No chunk finished in 20+ minutes with 8 or 4 pipelines. With 2 pipelines it took 8.5 minutes. Dropped |
+
+---
+
+## 24. 2026-10-22 — days 43–49: the block offset, optimum at zero
+
+§15 found that the xgboost model scores days 43–49 almost entirely clean, and
+tried to fix the balance between those days and days 36–42 with within-day
+ranks. Both directions lost. This is a cleaner version of the same test, on the
+best TabPFN blend.
+`src/blockshift.py` adds one constant to the pooled percentile rank of every test
+row from day 43 on. The order inside each block does not change; only where the
+block sits against days 36–42.
+
+| # | Shift on days 43–49 | Public score | vs 0.96825 |
+|---|---|---|---|
+| 62 | −0.05 | 0.96714 | −0.0011 |
+| 64 | −0.02 | 0.96805 | −0.0002 |
+| 51 | 0 (best blend) | 0.96825 | — |
+| 63 | +0.05 | 0.95519 | −0.0131 |
+
+The optimum is at about zero. Moving the block down costs little. Moving it up by
+the same 0.05 costs about twelve times as much. That is consistent with §15: if
+the low scores on days 43–49 are right, lifting those days puts clean rows above
+illicit ones from days 36–42. The blend's balance between the two blocks needs no
+correction. Post-processing has not gained anywhere: two within-day rank mixes
+and three block offsets all landed at or below the model they were applied to.
+
+---
+
+## 25. 2026-10-23 — variants inside TabPFN
+
+Everything below changes how TabPFN is run and keeps the model the same.
+
+| Variant | Compared with | Spearman | Public score | vs 0.96825 |
+|---|---|---|---|---|
+| Clip test features to the context range (12k bag, GPU) | Same bag, unclipped | 0.992 | not submitted | — |
+| Clip test features to the context range (8k bags) | Same bags, unclipped | 0.995 | not submitted | — |
+| Full 31,235-row context, non-cached, chunk 1000 | Best blend | 0.971 | not submitted alone | — |
+| 8 estimators per bag instead of 2, whole recipe rebuilt (#65) | Best blend | — | 0.96694 | −0.0013 |
+| Six time-marker features left out, whole recipe rebuilt (#66) | Best blend | — | 0.96402 | −0.0042 |
+
+**The time markers.** Six features separate days 18–35 from the test days at AUC
+above 0.9: `feat_101` 0.998, `feat_103` 0.997, `feat_100` 0.996, `feat_136` 0.994,
+`feat_139` 0.953 and `feat_137` 0.910. `feat_100`, `feat_101` and `feat_103` lie
+outside the training range for over 99% of test rows (§4.4). Two ways to remove
+the risk were tried.
+
+- **Clip** the test values into each bag's context range. The ranking barely
+  moves (0.992 and 0.995), so there is nothing to submit.
+- **Drop** the six features. This costs 0.0042, the largest loss of the TabPFN
+  variants in this section. TabPFN seems to get useful signal from these
+  features even where the test values are out of range. xgboost did the same
+  when 21 shifted features were dropped (row 5): +0.0079 offline, −0.0083 on the
+  board.
+
+**Estimators.** Eight estimators per bag take four times as long and score 0.0013
+below the best blend. The earlier 4-estimator bag was no better than a 2-estimator
+one either (§20). Internal ensembling is not where the gain is.
+
+**Context size.** The full 31,235-row context fits on 8 GB without the cache (the
+cached version runs out of memory at 14k or more) and takes 26 minutes. Its
+Spearman with the best blend is 0.971. It was not submitted alone. The 14,380-row
+full context for days 18+ had already tied the 12k bag (§20).
+
+**Other windows.** Days-12+ (row 56, 0.96800) added nothing. A days-23+ bag in the
+mix of row 44 scored 0.96552, under the neighbouring mixes without it (0.96570,
+0.96647).
+
+Every TabPFN-side variant since 2026-10-12 sits between 0.96402 and 0.96825, and
+none beats the best blend.
+
+---
+
+## 26. Exact-match re-identification features — no gain
+
+An idea checked offline only. For each row, count the earlier labelled rows that
+share an exact value of a feature, and give the counts to xgboost.
+
+| Window | Baseline | With exact-match counts | Δ |
+|---|---|---|---|
+| train ≤21 | 0.9139 | 0.9108 | −0.0031 |
+| train ≤29 | 0.9971 | 0.9973 | +0.0002 |
+
+No gain on either window, and a loss on the pre-break one. Not submitted. Feature
+changes keep their record: nothing in that category has gained on the board.
+
+---
+
+## 27. 2026-10-23 — Kumo Tabular, the first partner that adds to TabPFN
+
+Since 2026-10-12 every TabPFN variant, every bag mix and every partner (xgboost,
+CatBoost, TabICLv2, TabPFN v3) landed at or below 0.96825. NVIDIA Kumo Tabular is
+a different pretrained tabular model that also reads labelled rows as context.
+
+### 27.1 What was run
+
+`src/fm/run_kumo.py` (run from `src/fm` with `.venv-fm`) builds its context the
+way the TabPFN bags do: every illicit row from the first day on, plus seeded
+random licit rows up to the context size. Model size `large`, 8 estimators.
+Usage: `python run_kumo.py <first_day> <context_rows> <seed> <out_csv> [device]`.
+
+| Context | Rows | Runs |
+|---|---|---|
+| Days 18+ | 8,000 | seeds 0–4 |
+| Days 18+, full | 14,380 | seed 0 |
+| All days | 12,000 | seeds 0–4 |
+| All days, full | 31,235 | seed 0 |
+
+Twelve runs, about 2 minutes each at 8k and 18 minutes at 31k. The Kumo component
+(`kumo_blend.csv`) gives the days-18+ runs .125 each (.75 in total) and the
+all-days runs .04167 each (.25 in total). The final blend:
+
+    python src/blend.py blend_r75_kumo25.csv blend_tabpfn_recent75_12k.csv:0.75 kumo_blend.csv:0.25
+
+### 27.2 Result
+
+| # | Model | Public score |
+|---|---|---|
+| 51 | Best TabPFN blend | 0.96825 |
+| 67 | **Best TabPFN blend .75 + Kumo .25** | **0.97162** |
+
++0.0034 over the TabPFN-only blend and +0.0164 over the xgboost model of record.
+It was 2nd when submitted and 3rd later that evening: 2nd is 0.97190 and the
+leader 0.97446. The gap to 2nd is 0.0003, inside the 0.0012 noise floor of §13, so
+the order of 2nd and 3rd means little. The gap to the leader is 0.0028.
+
+The gain is about three times that noise floor. It is larger than any blend gain
+in the xgboost era (+0.0009 to +0.0013) and than the whole spread of the TabPFN
+plateau (0.96775 to 0.96825, 0.0005). It is still one submission on the 30%
+public sample.
+
+### 27.3 Why it worked
+
+Kumo ranks the test rows differently from TabPFN, and its own runs agree with
+each other.
+
+| Rank correlation (Spearman, test) | Value |
+|---|---|
+| One Kumo seed vs another | 0.98 |
+| Averaged Kumo vs best TabPFN blend | 0.863 |
+| Single Kumo run vs best TabPFN blend | 0.83–0.91 |
+
+The 0.98 matters. The 12-run average is a stable second opinion, so its
+disagreement with TabPFN does not come from run-to-run randomness.
+
+Correlation alone does not explain it. Every partner added to the TabPFN blend:
+
+| Partner | Rank correlation with the TabPFN side | Result |
+|---|---|---|
+| xgboost window blend | 0.85 (§20, 3-bag TabPFN) | Lost: the mix with xgboost at .15 scored 0.96647, TabPFN only 0.96692 (rows 45, 46) |
+| CatBoost | 0.73–0.75 | Lost 0.0011 at .15 |
+| TabICLv2 | 0.92–0.93 | −0.0003 at .20, −0.0020 at .35 |
+| TabPFN v3 checkpoints | 0.87–0.91 | −0.0012 at .25 |
+| **Kumo Tabular** | **0.86** | **+0.0034 at .25** |
+
+CatBoost ranks furthest from TabPFN and lost because it is much weaker (alone
+0.94800 against 0.96026 for TabPFN). The v3 checkpoints rank about as differently
+as Kumo and lost. Kumo alone was never submitted, so its own board score is not
+known. The blend gain is the evidence that it is strong enough to help and
+different enough to matter. The estimator count is not the reason: Kumo runs 8
+and TabPFN with 8 lost (row 65).
+
+### 27.4 What transfers, updated
+
+| Category | Record on the board |
+|---|---|
+| Settings, seeds, averaging (xgboost) | Transferred at about half the offline size, until the settings direction ran out (§11) |
+| Same model on recent windows, blended | Gained, in xgboost and again in TabPFN |
+| A pretrained tabular model in place of xgboost | **Gained**: TabPFN 0.96026 alone, 0.96825 as a tuned blend |
+| More of the same TabPFN (bags, weights, context size, estimators, checkpoints, windows) | Plateau at 0.968; 8 estimators 0.96694, v3 checkpoints 0.96701 |
+| Feature-set changes | No gain: graph features, dropped shifted features, within-day ranks, and now six time markers dropped (0.96402) all lost; labelled-neighbour features tied; exact-match counts no gain offline |
+| Post-processing | No gain: within-day rank both ways, block offset (optimum at zero) |
+| Partner next to TabPFN | 1 for 5: Kumo gained; xgboost, CatBoost, TabICLv2 and TabPFN v3 lost |
+
+§10.4 said to stop testing model families. That held for the seven tried then
+(trees, linear, a neural net). It did not hold for pretrained tabular models:
+TabPFN beat xgboost, and a second pretrained model from a different family moved
+the TabPFN plateau. The plateau was a ceiling for one family, not for the task.
+
+---
+
+## 28. Where this could still go
+
+The deadline is 2026-10-24 15:55 UTC. Three submissions a day, two final
+selections, already set (§1): the Kumo blend and the TabPFN-only blend.
+
+- **Kumo weight.** Only .25 was tried. Going from 0 to .25 gained 0.0034, and
+  nothing says the optimum is at .25. A .35 or .40 share costs no GPU time: both
+  parts already exist and `src/blend.py` combines them in seconds. Anything
+  under ~0.001 on the board cannot be told from noise (§13), so only a clear
+  gain would justify switching a final selection.
+- **More Kumo seeds.** Seeds agree at 0.98, so more runs of the same recipe are
+  expected to add little. They are cheap, about 2 minutes each at 8k.
+- **A Kumo 12k days-18+ context.** The TabPFN blend's recent share uses 8k and
+  12k bags. The Kumo component has 8k and the full 14,380 rows, and no 12k.
+
+All three are tuning around one result. Anything touching the feature set has
+no record of gaining.

@@ -1,9 +1,9 @@
 """Shared data loading / chunking helpers for the foundation-model runners (run_kumo.py, run_limix.py).
 
-Lives outside the Kaggle repo on purpose. Reads the repo's parquet cache read-only.
+Run them with .venv-fm (Kumo needs a newer torch than the main venv). Reads the repo's parquet cache read-only.
 
 Env vars (all optional):
-  FM_REPO            repo root (default C:\\Users\\brixn\\Documents\\BT4012\\bt4012-kaggle)
+  FM_REPO            repo root (default: two folders above this file)
   FM_MAX_TEST        truncate the test set to its first N rows (smoke tests)
   FM_MAX_FEATURES    keep only the K features with highest univariate |AUC-0.5| on the context rows (default: all 165)
   FM_MAX_ILLICIT_FRAC  cap on the illicit share of the context (default 0.5; only bites when #illicit is large)
@@ -21,7 +21,7 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
-REPO = Path(os.environ.get("FM_REPO", r"C:\Users\brixn\Documents\BT4012\bt4012-kaggle"))
+REPO = Path(os.environ.get("FM_REPO", Path(__file__).resolve().parents[2]))
 CACHE = REPO / "cache"
 FEATURES = [f"feat_{i}" for i in range(1, 166)]  # same as src/data.py
 
