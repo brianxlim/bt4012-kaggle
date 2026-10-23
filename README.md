@@ -3,108 +3,206 @@
 Kaggle competition [`bt-4012-competition-2026`](https://www.kaggle.com/competitions/bt-4012-competition-2026).
 Predict which Bitcoin transactions are illicit, scored by ROC AUC.
 
+**Model of record:** a TabPFN v3.5 blend (.75) plus NVIDIA Kumo Tabular (.25),
+`submissions/blend_r75_kumo25.csv`. Public score **0.97162**: 2nd when submitted
+on 2026-10-23, 3rd that evening (2nd 0.97190, leader 0.97446). The competition
+closes 2026-10-24 15:55 UTC.
+
 ---
 
 ## Setup
 
-> Pre-requisite: Python 3.12 and a Kaggle account.
+Pre-requisites: Python, a Kaggle account and an NVIDIA GPU (built on an RTX 3060 Ti,
+8 GB). One 8k-context TabPFN bag took about 18 minutes on 4 CPU cores and about 3.5
+on the GPU. Commands are PowerShell from the repo root; on macOS or Linux use
+`.venv/bin/python` (and `brew install libomp` for XGBoost and LightGBM).
 
-**1. Virtual environment and dependencies**
+**1. Environment.** The pins in `requirements.txt` need Python 3.12:
 
-```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-XGBoost and LightGBM need OpenMP on macOS:
+On Python 3.11 (used for the final runs) `numpy==2.5.3` does not install. Install
+unpinned and reuse the system CUDA torch (2.5.1+cu124):
 
-```bash
-brew install libomp
+```powershell
+python -m venv .venv --system-site-packages
+.venv\Scripts\python -m pip install kaggle lightgbm numpy pandas pyarrow scikit-learn scipy xgboost tabpfn==9.2.0 tabicl==2.2.0
+.venv\Scripts\python -c "import torch; print(torch.cuda.is_available())"   # must print True
 ```
 
-**2. Kaggle API token**
+**2. Kaggle token.** At <https://www.kaggle.com/settings> → API → **Create New
+Token**. Put it in `.env` at the repo root as `KAGGLE_API_TOKEN=KGAT_...`
+(gitignored, never commit it).
 
-Go to <https://www.kaggle.com/settings> → API → **Create New Token**. Put it in
-a `.env` file at the repo root:
+**3. Data.** `python init.py` downloads the four CSVs into `data/`, checks their
+row counts and builds the parquet cache in `cache/`. Both are gitignored. Re-running is safe.
 
+**4. TabPFN token.** Add `TABPFN_TOKEN=...` (from priorlabs.ai) to `.env`. The
+default weights, TabPFN v3.5, download on the first run. The v3, v2.6 and v2.5
+weights also need a one-time licence acceptance at
+<https://ux.priorlabs.ai/account/licenses>; the final model does not use them.
+
+**5. Kumo environment (only for the Kumo runs).** Kumo needs a newer torch, so it
+gets its own venv, `.venv-fm` (gitignored):
+
+```powershell
+python -m venv .venv-fm
+.venv-fm\Scripts\python -m pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+.venv-fm\Scripts\python -m pip install -r requirements-fm.txt
 ```
-KAGGLE_API_TOKEN=KGAT_your_token_here
-```
 
-`.env` is gitignored. Never commit it.
-
-**3. Fetch the data and build the cache**
-
-```bash
-python init.py
-```
-
-This downloads the four CSVs into `data/`, checks each one has the expected
-number of rows, and converts them to parquet in `cache/`. The raw `train.csv` is
-461 MB and takes about a minute to parse; every load after that is instant.
-Both `data/` and `cache/` are gitignored — the data is 515 MB, well over
-GitHub's limit.
-
-Re-running `init.py` is safe. It skips the download when the files are
-already correct.
+The first run downloads the weights from Hugging Face (`nvidia/Kumo-Tabular`,
+revision v1.0.1, `large`, about 855 MB; OpenMDW 1.1 licence, not gated).
 
 ---
 
 ## Reproducing the submission
 
-```bash
-python src/model_tuned.py
+All bag and blend files are committed in `submissions/`, so step 4 alone rebuilds
+the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`). On the RTX 3060 Ti
+a v3.5 bag takes about 3.5 minutes at 8,000 context rows and 5 to 8 at 12,000; a
+Kumo run takes 2 to 3 (18 at 31k rows). Runs save each chunk of test rows and
+resume if stopped. Saved bags are keyed by version, tag and bag number only, so use
+a new tag when you change any other setting.
+
+**1. TabPFN bags** (arguments: `first_day bag_from bag_to tag`)
+
+```powershell
+python src/model_tabpfn.py 1 0 6 all                                          # all days, 8k, 6 bags
+$env:TABPFN_CONTEXT=12000; python src/model_tabpfn.py 1 0 1 ctx12k            # all days, 12k, 1 bag
+python src/model_tabpfn.py 18 0 3 recent18                                    # days 18+, 8k, 3 bags
+$env:TABPFN_CONTEXT=12000; python src/model_tabpfn.py 18 0 1 recent18ctx12k   # days 18+, 12k, 1 bag
+Remove-Item Env:TABPFN_CONTEXT
 ```
 
-Takes a few minutes. It scores the model over 3 time folds × 5 seeds, prints the
-result with an error bar, then fits on all labelled days and writes
-`submissions/spw757_mcw8.csv` and a row in `reports/experiments.csv`.
+The blend uses file names from earlier versions of the script. A fresh run writes
+`tabpfn_bags0-5.csv`, `tabpfn_ctx12k_bags0-0.csv` and `tabpfn_recent18ctx12k_bags0-0.csv`
+instead of `tabpfn_all_bags0-5.csv`, `tabpfn_ctx12k_bag0.csv` and
+`tabpfn_recent18ctx12k_bag0.csv` (`recent18` is unchanged), and does not overwrite
+the committed files. Rename them or pass the new names in step 2. The committed
+bags are already v3.5: a GPU rebuild of the days-18+ 8k bags correlates 0.997
+(Spearman) with them.
 
-Then submit it:
+**2. Best TabPFN blend** (public 0.96825)
 
-```bash
-.venv/bin/kaggle competitions submit -c bt-4012-competition-2026 -f submissions/spw757_mcw8.csv -m "describe the change"
+```powershell
+python src/blend.py blend_tabpfn_recent75_12k.csv tabpfn_all_bags0-5.csv:0.167 tabpfn_ctx12k_bag0.csv:0.083 tabpfn_recent18_bags0-2.csv:0.40 tabpfn_recent18ctx12k_bag0.csv:0.35
 ```
 
-**Three submissions per day.** Read [`CONTEXT.md`](CONTEXT.md) before spending
-one — most ideas that look good offline have lost ground on the leaderboard, and
-that document records which kinds do and do not transfer.
+`blend.py` takes file names inside `submissions/` and rank-averages them, dividing by the sum of the weights.
+
+**3. Kumo runs** (`.venv-fm`, from `src/fm`; arguments: `first_day context_rows seed out_csv device`)
+
+```powershell
+cd src/fm
+$py = "..\..\.venv-fm\Scripts\python.exe"
+foreach ($s in 0..4) { & $py run_kumo.py 18 8000 $s "..\..\submissions\kumo_recent18_s${s}.csv" cuda }
+& $py run_kumo.py 18 14380 0 ..\..\submissions\kumo_recent18full_s0.csv cuda
+foreach ($s in 0..4) { & $py run_kumo.py 1 12000 $s "..\..\submissions\kumo_all12k_s${s}.csv" cuda }
+& $py run_kumo.py 1 31235 0 ..\..\submissions\kumo_allfull_s0.csv cuda
+cd ..\..
+```
+
+Chunks go to `<out_csv>.parts/` (untracked). Delete that folder before re-running
+with a different context or seed under the same output name.
+
+**4. Kumo blend, final blend, submit** (repo root)
+
+```powershell
+python src/blend.py kumo_blend.csv `
+  kumo_recent18_s0.csv:0.125 kumo_recent18_s1.csv:0.125 kumo_recent18_s2.csv:0.125 `
+  kumo_recent18_s3.csv:0.125 kumo_recent18_s4.csv:0.125 kumo_recent18full_s0.csv:0.125 `
+  kumo_all12k_s0.csv:0.04167 kumo_all12k_s1.csv:0.04167 kumo_all12k_s2.csv:0.04167 `
+  kumo_all12k_s3.csv:0.04167 kumo_all12k_s4.csv:0.04167 kumo_allfull_s0.csv:0.04167
+python src/blend.py blend_r75_kumo25.csv blend_tabpfn_recent75_12k.csv:0.75 kumo_blend.csv:0.25
+.venv\Scripts\kaggle competitions submit -c bt-4012-competition-2026 -f submissions/blend_r75_kumo25.csv -m "describe the change"
+```
+
+**Three submissions per day**, up to two final selections. Selected on 2026-10-23:
+`blend_r75_kumo25.csv` and `blend_tabpfn_recent75_12k.csv`.
 
 ---
 
 ## What the model is
 
-Gradient-boosted decision trees (XGBoost) on the 165 supplied features, labelled
-rows only, five random seeds rank-averaged.
+TabPFN and Kumo Tabular are pretrained tabular foundation models. Neither is
+trained here: each reads a context of labelled rows and predicts the test rows in
+one forward pass. The context recipe is the same everywhere: all illicit rows from
+a first day on, plus seeded random licit rows up to the context size. Bags differ
+in seed, first day and context size, and are rank-averaged. A TabPFN bag uses 2
+internal estimators, a Kumo run 8.
 
-| Setting | Value | Why |
+| Part | Runs | Context rows | First day | Weight |
+|---|---|---|---|---|
+| TabPFN, all days | 6 bags | 8,000 | 1 | .167 |
+| TabPFN, all days | 1 bag | 12,000 | 1 | .083 |
+| TabPFN, days 18+ | 3 bags | 8,000 | 18 | .40 |
+| TabPFN, days 18+ | 1 bag | 12,000 | 18 | .35 |
+| Kumo, days 18+ | 5 seeds, plus 1 run | 8,000; 14,380 (all) | 18 | .125 each |
+| Kumo, all days | 5 seeds, plus 1 run | 12,000; 31,235 (all) | 1 | .04167 each |
+
+Weights are within the TabPFN blend and the Kumo blend; the final score is the
+TabPFN blend × .75 plus the Kumo blend × .25. Public score: tuned XGBoost 0.95521,
+TabPFN alone 0.96026, best TabPFN blend 0.96825, plus Kumo **0.97162**. Kumo is
+the first non-TabPFN model that added to TabPFN: its seeds agree at Spearman 0.98,
+but the averaged Kumo ranks test rows differently from the TabPFN blend (0.863).
+
+Tried against the 0.96825 blend, no gain (public score): TabICLv2 at .20 / .35
+0.96799 / 0.96629; three TabPFN v3 checkpoints at .25 0.96701; days-43+ block
+offset −0.05 / +0.05 / −0.02 (`src/blockshift.py`) 0.96714 / 0.95519 / 0.96805;
+8 estimators per bag 0.96694; leaving out the six time-marker features 0.96402.
+LimiX-2 was dropped (no test chunk finished in 20+ minutes). More in
+[`reports/progress.md`](reports/progress.md).
+
+### Settings
+
+`src/model_tabpfn.py` environment variables, all optional:
+
+| Variable | Default | Meaning |
 |---|---|---|
-| `max_depth` | 10 | |
-| `colsample_bytree` | 0.5 | |
-| `learning_rate` | 0.1 | |
-| `scale_pos_weight` | 7.57 | Only 11.67% of rows are illicit; 27,591 / 3,644 makes both classes weigh the same |
-| `min_child_weight` | 8 | Stops the tree carving out the tiny illicit clusters that the weighting makes look important |
+| `TABPFN_CONTEXT` | 8000 | Context rows per bag; 99999 = all labelled rows from the first day |
+| `TABPFN_ESTIMATORS` | 2 | Internal ensemble size |
+| `TABPFN_CHUNK` | 2000 | Test rows per predict call |
+| `TABPFN_VERSION` | unset | `v2_5`, `v2_6`, `v3`, `v3_5` or `tabicl` (TabICLv2). Unset = package default (v3.5) and the old file names. Output: `tabpfn{version}_{tag}_bags{a}-{b}.csv`, e.g. `tabpfnv35_recent18_bags0-2.csv` |
+| `TABPFN_CKPT` | unset | A specific checkpoint file of that version |
+| `TABPFN_CACHED` | unset | `1` encodes the context once (`fit_with_cache`); runs out of memory at 14k context rows or more on 8 GB |
+| `TABPFN_DROP` | unset | Comma-separated features to leave out |
+| `TABPFN_CLIP` | unset | `1` clips test features to the bag's context range |
+| `TABICL_BATCH` | 2 | Batch size for TabICLv2 |
+| `TABPFN_DEVICE` | auto | `cuda`, `mps` or `cpu`; default is CUDA, then Apple MPS, then CPU |
+| `TABPFN_TOKEN` | `.env` | Prior Labs token |
 
-The last two are the difference between 0.94812 and 0.95333. Neither works
-alone — see [`reports/progress.md`](reports/progress.md).
+`src/fm/run_kumo.py`: `KUMO_SIZE` (`large`), `KUMO_ESTIMATORS` (8), `FM_CHUNK` (1000
+test rows per call), `FM_REPO` (repo root), `FM_MAX_ILLICIT_FRAC` (0.5, cap on the
+illicit share of the context), `FM_MAX_TEST` (first N test rows, for smoke tests).
 
 ---
 
 ## Layout
 
 ```
-init.py                 one-time setup: download data, build cache
-src/data.py             loading and parquet caching
-src/validation.py       time-aware folds and the train/test drift check
-src/train.py            the shared training routine every experiment uses
-src/model_tuned.py      the model of record
-src/tune.py             settings sweep
-src/experiment.py       writing submissions and logging results
-reports/experiments.csv one row per submission, offline score against leaderboard
-reports/progress.md     what has been tried, what worked, what did not
-reports/tuning.csv      the settings sweep
-CONTEXT.md              what future work needs to know before touching anything
-ADR.md                  plain-English glossary of every term used
-data/  cache/  .env     gitignored
+init.py                  one-time setup: download data, build cache
+requirements.txt         main environment (pins need Python 3.12); requirements-fm.txt is .venv-fm
+src/data.py              loading and parquet caching
+src/model_tabpfn.py      TabPFN and TabICLv2 bags (TabPFN part of the model of record)
+src/fm/run_kumo.py       Kumo Tabular runner (Kumo part of the model of record)
+src/fm/fm_common.py      context sampling and chunked prediction for src/fm
+src/fm/run_limix.py      LimiX-2 runner (dropped, too slow on 8 GB)
+src/blend.py             rank-average prediction files with weights
+src/blockshift.py        shift the pooled rank of test rows from a given day on
+src/train.py validation.py experiment.py   xgboost training, time-aware folds, writing submissions
+src/model_tuned.py       tuned xgboost, the earlier model of record (0.95521)
+src/tune.py tune_v2.py   xgboost settings searches
+src/model_*.py gnn.py    other experiments, each described in its docstring
+src/dayrank.py  src/graph_labelled.py    post-processing and graph-feature experiments
+reports/experiments.csv  one row per submission, offline score against leaderboard
+reports/progress.md      what has been tried, what worked, what did not
+reports/tuning.csv       the settings sweep (tuning_v2.csv: the second search)
+submissions/             prediction files (index,target); *.csv.parts/ are untracked Kumo chunks
+data/  cache/  .env  .venv/  .venv-fm/    gitignored (cache/ also holds saved TabPFN bags)
 ```
 
 ---
@@ -116,7 +214,8 @@ data/  cache/  .env     gitignored
   cross-validation gives a misleading answer.
 - `train.csv` holds every transaction for days 1–35, labelled or not.
   `test.csv` holds only the labelled ones for days 36–49. That asymmetry has
-  already cost one submission — see `CONTEXT.md`.
+  already cost one submission (`reports/progress.md`, section 7).
+- 31,235 labelled training rows: 27,591 licit, 3,644 illicit (11.67%).
 - Submission format is `index,target`: 15,329 rows in `test.csv` order, where
   target is the probability a transaction is illicit.
 
