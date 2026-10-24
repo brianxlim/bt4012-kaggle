@@ -1,10 +1,23 @@
-kaggle==2.2.4
-lightgbm==4.7.0
-numpy==2.5.3
-pandas==3.0.5
-pyarrow==25.0.1
-scikit-learn==1.9.1
-scipy==1.18.1
-tabicl==2.2.0
+# Main environment (.venv): the versions installed for the final runs, Python 3.11.
+# e1122376.ipynb and the scripts in src/ run here. Kumo Tabular runs in a second environment, see requirements-fm.txt.
+#
+# torch: the PyPI wheel for Windows is CPU-only. The final runs used the CUDA 12.4 build (2.5.1+cu124), installed
+# system-wide and reused with `python -m venv .venv --system-site-packages`; install it first from
+# https://download.pytorch.org/whl/cu124 if it is not there, or pip will pull the CPU wheel.
+torch==2.5.1
+numpy==1.26.4
+pandas==2.2.2
+scipy==1.17.1
+scikit-learn==1.5.0
+xgboost==3.2.0
 tabpfn==9.2.0
-xgboost==3.4.1
+tabicl==2.2.0
+lightgbm==4.7.0
+catboost==1.2.10
+pyarrow==16.1.0
+kaggle==2.2.4
+# Running the notebook (jupyter nbconvert --execute)
+jupyter==1.0.0
+nbconvert==7.2.7
+nbformat==5.7.1
+ipykernel==6.19.2

@@ -19,19 +19,15 @@ Pre-requisites: Python, a Kaggle account and an NVIDIA GPU (built on an RTX 3060
 on the GPU. Commands are PowerShell from the repo root; on macOS or Linux use
 `.venv/bin/python` (and `brew install libomp` for XGBoost and LightGBM).
 
-**1. Environment.** The pins in `requirements.txt` need Python 3.12:
+**1. Environment.** The pins in `requirements.txt` are the versions of the final runs
+(Python 3.11). Reuse the system CUDA torch (2.5.1+cu124):
 
-```powershell
-python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-```
-
-On Python 3.11 (used for the final runs) `numpy==2.5.3` does not install. Install
-unpinned and reuse the system CUDA torch (2.5.1+cu124):
+If the machine has no CUDA torch yet, install it first:
+`python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124`.
 
 ```powershell
 python -m venv .venv --system-site-packages
-.venv\Scripts\python -m pip install kaggle lightgbm numpy pandas pyarrow scikit-learn scipy xgboost tabpfn==9.2.0 tabicl==2.2.0
+.venv\Scripts\python -m pip install -r requirements.txt
 .venv\Scripts\python -c "import torch; print(torch.cuda.is_available())"   # must print True
 ```
 
@@ -63,10 +59,33 @@ revision v1.0.1, `large`, about 855 MB; OpenMDW 1.1 licence, not gated).
 
 ## Reproducing the submission
 
+**Notebook:** `e1122376.ipynb` documents the whole pipeline in one place. Run it from the repo root with the repo's `.venv`:
+
+```powershell
+.venv\Scripts\python.exe -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=3600 e1122376.ipynb
+```
+
+Do not use `jupyter nbconvert` or `python -m jupyter`: they start the system Python, which has no xgboost. By default the notebook
+runs the validation on the GPU (about 10 minutes the first time, cached afterwards; `$env:E1122376_SKIP_VALIDATION="1"` skips it
+and needs no GPU), then **re-blends the committed per-run prediction files** and checks the three blends against the committed ones exactly.
+That exact match checks the blending arithmetic and the file format, not the models. `$env:E1122376_RERUN="1"` regenerates every TabPFN bag
+and Kumo run from `train.csv` and `test.csv` (about 2.5 hours; the 31k-row Kumo run alone takes about 28 minutes). It is not bit-identical to the
+committed files, so it reports rank correlations. Its building blocks were checked at full size, but the complete rerun was not executed end to end.
+A full rerun needs `--ExecutePreprocessor.timeout=-1` (the timeout is per cell) and should write to its own file so it does not overwrite the notebook's saved outputs:
+
+```powershell
+$env:E1122376_RERUN="1"; .venv\Scripts\python.exe -m nbconvert --to notebook --execute --ExecutePreprocessor.timeout=-1 --output-dir rebuild --output e1122376_rerun.ipynb e1122376.ipynb
+```
+
+Close other GPU programs first: the largest runs use almost all of the 8 GB. After an aborted rerun, check `nvidia-smi` for a leftover Kumo process before resuming.
+
+**AI assistance.** This project, including the notebook, this README and `reports/progress.md`, was built with an AI coding assistant (Claude Code, by Anthropic).
+The assistant wrote and ran code and experiments and drafted the text.
+
 All bag and blend files are committed in `submissions/`, so step 4 alone rebuilds
 the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`). On the RTX 3060 Ti
 a v3.5 bag takes about 3.5 minutes at 8,000 context rows and 5 to 8 at 12,000; a
-Kumo run takes 2 to 3 (18 at 31k rows). Runs save each chunk of test rows and
+Kumo run takes 2 to 3 (about 28 at 31k rows). Runs save each chunk of test rows and
 resume if stopped. Saved bags are keyed by version, tag and bag number only, so use
 a new tag when you change any other setting.
 
@@ -150,14 +169,15 @@ internal estimators, a Kumo run 8.
 | TabPFN, all days | 1 bag | 12,000 | 1 | .083 |
 | TabPFN, days 18+ | 3 bags | 8,000 | 18 | .40 |
 | TabPFN, days 18+ | 1 bag | 12,000 | 18 | .35 |
-| Kumo, days 18+ | 5 seeds, plus 1 run | 8,000; 14,380 (all) | 18 | .125 each |
-| Kumo, all days | 5 seeds, plus 1 run | 12,000; 31,235 (all) | 1 | .04167 each |
+| Kumo, days 18+ | 10 seeds, plus 1 run | 8,000; 14,380 (all) | 18 | .06818 each (.75 in total) |
+| Kumo, all days | 10 seeds, plus 1 run | 12,000; 31,235 (all) | 1 | .02273 each (.25 in total) |
 
 Weights are within the TabPFN blend and the Kumo blend; the final score is the
-TabPFN blend × .75 plus the Kumo blend × .25. Public score: tuned XGBoost 0.95521,
-TabPFN alone 0.96026, best TabPFN blend 0.96825, plus Kumo **0.97162**. Kumo is
+TabPFN blend × .45 plus the Kumo blend × .55. Public score: tuned XGBoost 0.95521,
+TabPFN alone 0.96026, best TabPFN blend 0.96825, plus Kumo **0.97357** (the first
+Kumo blend, 12 runs at weight .25, scored 0.97162). Kumo is
 the first non-TabPFN model that added to TabPFN: its seeds agree at Spearman 0.98,
-but the averaged Kumo ranks test rows differently from the TabPFN blend (0.863).
+but the averaged Kumo ranks test rows differently from the TabPFN blend (0.867).
 
 Tried against the 0.96825 blend, no gain (public score): TabICLv2 at .20 / .35
 0.96799 / 0.96629; three TabPFN v3 checkpoints at .25 0.96701; days-43+ block
@@ -193,8 +213,9 @@ illicit share of the context), `FM_MAX_TEST` (first N test rows, for smoke tests
 ## Layout
 
 ```
+e1122376.ipynb           the notebook: data checks, feature-engineering evidence, model, validation, submission
 init.py                  one-time setup: download data, build cache
-requirements.txt         main environment (pins need Python 3.12); requirements-fm.txt is .venv-fm
+requirements.txt         main environment (Python 3.11 pins); requirements-fm.txt is .venv-fm
 src/data.py              loading and parquet caching
 src/model_tabpfn.py      TabPFN and TabICLv2 bags (TabPFN part of the model of record)
 src/fm/run_kumo.py       Kumo Tabular runner (Kumo part of the model of record)
@@ -204,7 +225,7 @@ src/blend.py             rank-average prediction files with weights
 src/blockshift.py        shift the pooled rank of test rows from a given day on
 src/train.py validation.py experiment.py   xgboost training, time-aware folds, writing submissions
 src/model_tuned.py       tuned xgboost, the earlier model of record (0.95521)
-src/tune.py tune_v2.py   xgboost settings searches
+src/tune.py tune_v2.py   xgboost settings searches (tune_v2.py needs Python 3.12 f-string syntax)
 src/model_*.py gnn.py    other experiments, each described in its docstring
 src/dayrank.py  src/graph_labelled.py    post-processing and graph-feature experiments
 reports/experiments.csv  one row per submission, offline score against leaderboard

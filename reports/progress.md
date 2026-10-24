@@ -355,8 +355,8 @@ scaled monotonically with the guessed labels' total influence, optimum at zero.
 The graph-feature failure has a precise cause worth recording. Two engineered
 features counted "neighbours with no feature row". Because `train.csv` holds
 every node for days 1–35 while `test.csv` holds only labelled nodes for days
-36–49, that count is **exactly 0 for every training row and non-zero for every
-test row**:
+36–49, that count is **exactly 0 for every training row and non-zero for 53% of the
+test rows** (the means below are over all test rows):
 
 ```
 g_unknown_neighbours   train mean 0.0000   test mean 1.5816

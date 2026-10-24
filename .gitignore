@@ -3,8 +3,11 @@
 .venv-fm/
 __pycache__/
 cache/
+rebuild/
 data/
 .DS_Store
 catboost_info/
 logs/
 .claude/
+submissions/*.parts/
+
