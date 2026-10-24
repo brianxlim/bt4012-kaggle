@@ -16,15 +16,69 @@ they are in the git history at commit `d93e014`.
 
 ---
 
+## Running the notebook
+
+`e1122376.ipynb` rebuilds the submitted file from the committed prediction files and checks it
+against `submissions/blend_tabpfn_kumo22_55.csv`. This default run needs **no GPU, no TabPFN token
+and no second environment**: only Python 3.11, the packages in `requirements.txt` and the competition data.
+
+1. Use **Python 3.11**. The pins do not install on 3.10 or older (scipy, kaggle) or on 3.13 or newer
+   (no torch, numpy or pandas wheels). On Windows, clone into a short folder path: pip cannot write
+   numpy's files under paths longer than 260 characters.
+2. Put the four competition CSVs (`train.csv`, `test.csv`, `txs_edgelist.csv`, `sample_submission.csv`)
+   in `data/`: download them from the [Data tab](https://www.kaggle.com/competitions/bt-4012-competition-2026/data)
+   (the account must have joined the competition), or run `init.py` (Setup, step 3).
+3. Run the commands below. The plain PyPI torch is enough; a CUDA build is only for recomputing on a GPU.
+
+Windows (PowerShell):
+
+```powershell
+git clone https://github.com/brianxlim/bt4012-kaggle.git
+cd bt4012-kaggle
+py -3.11 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+# put the four CSVs in data\ now
+.venv\Scripts\python -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=3600 e1122376.ipynb
+```
+
+macOS or Linux:
+
+```bash
+git clone https://github.com/brianxlim/bt4012-kaggle.git
+cd bt4012-kaggle
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+# put the four CSVs in data/ now
+.venv/bin/python -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=3600 e1122376.ipynb
+```
+
+On Linux without an NVIDIA GPU, first run `.venv/bin/python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu`:
+the PyPI torch for Linux is the CUDA build with about 3 GB of dependencies. The CPU build satisfies the `torch==2.5.1` pin.
+
+The run takes about a minute on a CPU. Section 7 prints
+`OK: the three rebuilt blends are identical to the committed files`, and the submission is written to
+`rebuild/fastpath/e1122376_submission.csv`. Section 5 computes the validation scores from the committed
+predictions in `reports/validation/`. Section 4.3 prints which TabPFN checkpoint the package loads; without a
+TabPFN token it says the checkpoint was not loaded, which is expected. Recomputing the validation, and the full rerun of every model
+(`E1122376_RERUN=1`), need an NVIDIA GPU, a TabPFN token and `.venv-fm` (Setup below).
+
+This was tested on 2026-10-24 from an anonymous clone of this repository, in a new Python 3.11 venv
+with only `requirements.txt` installed (CPU torch, no TabPFN token): the notebook ran without errors and wrote a file identical to the committed submission.
+With a GPU, a token and `.venv-fm`, a run with an empty validation folder recomputed all eight validation predictions bit for bit.
+
+---
+
 ## Setup
 
-Pre-requisites: Python, a Kaggle account and an NVIDIA GPU (built on an RTX 3060 Ti,
+Everything below is for the GPU work: recomputing the validation, the full rerun, and the scripts in `src/`.
+
+Pre-requisites: Python 3.11, a Kaggle account and an NVIDIA GPU (built on an RTX 3060 Ti,
 8 GB). One 8k-context TabPFN bag took about 18 minutes on 4 CPU cores and about 3.5
 on the GPU. Commands are PowerShell from the repo root; on macOS or Linux use
 `.venv/bin/python` (and `brew install libomp` for XGBoost and LightGBM).
 
 **1. Environment.** The pins in `requirements.txt` are the versions of the final runs
-(Python 3.11). Reuse the system CUDA torch (2.5.1+cu124):
+(Python 3.11). The final runs reused the system CUDA torch (2.5.1+cu124):
 
 If the machine has no CUDA torch yet, install it first:
 `python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124`.
@@ -32,15 +86,16 @@ If the machine has no CUDA torch yet, install it first:
 ```powershell
 python -m venv .venv --system-site-packages
 .venv\Scripts\python -m pip install -r requirements.txt
-.venv\Scripts\python -c "import torch; print(torch.cuda.is_available())"   # must print True
+.venv\Scripts\python -c "import torch; print(torch.cuda.is_available())"   # True with a CUDA torch; False on a CPU-only install
 ```
 
 **2. Kaggle token.** At <https://www.kaggle.com/settings> → API → **Create New
 Token**. Put it in `.env` at the repo root as `KAGGLE_API_TOKEN=KGAT_...`
-(gitignored, never commit it).
+(gitignored, never commit it). An exported `KAGGLE_API_TOKEN` or a token in `~/.kaggle` also works.
 
-**3. Data.** `python init.py` downloads the four CSVs into `data/`, checks their
-row counts and builds the parquet cache in `cache/`. Both are gitignored. Re-running is safe.
+**3. Data.** `.venv\Scripts\python init.py` downloads the four CSVs into `data/`, checks their
+row counts and builds the parquet cache in `cache/` (used by the scripts in `src/`, not by the notebook). Both are gitignored.
+Re-running is safe; when the CSVs are already there it needs no token. The account must have joined the competition.
 
 **4. TabPFN token.** Add `TABPFN_TOKEN=...` (from priorlabs.ai) to `.env`. The
 default weights, TabPFN v3.5, download on the first run. The v3, v2.6 and v2.5
@@ -69,9 +124,9 @@ revision v1.0.1, `large`, about 855 MB; OpenMDW 1.1 licence, not gated).
 .venv\Scripts\python.exe -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=3600 e1122376.ipynb
 ```
 
-Do not use `jupyter nbconvert` or `python -m jupyter`: they start the system Python, which has no xgboost. By default the notebook
-runs the validation on the GPU (about 10 minutes the first time, cached afterwards; `$env:E1122376_SKIP_VALIDATION="1"` skips it
-and needs no GPU), then **re-blends the committed per-run prediction files** and checks the three blends against the committed ones exactly.
+Do not use a bare `jupyter nbconvert` or `python -m jupyter` unless `.venv` is activated: they start another Python, which may have no xgboost. By default the notebook
+computes the validation scores from the committed predictions in `reports/validation/` (no GPU; to recompute them live, about 10 minutes on the GPU,
+point `$env:E1122376_VALID_DIR` at an empty folder; `$env:E1122376_SKIP_VALIDATION="1"` skips section 5), then **re-blends the committed per-run prediction files** and checks the three blends against the committed ones exactly.
 That exact match checks the blending arithmetic and the file format, not the models. `$env:E1122376_RERUN="1"` regenerates every TabPFN bag
 and Kumo run from `train.csv` and `test.csv` (about 2 hours; the 31k-row Kumo run alone takes about 32 minutes). It is not bit-identical to the
 committed files, so it reports rank correlations. The complete rerun ran end to end on 24 October 2026 in 121 minutes:
@@ -85,8 +140,9 @@ $env:E1122376_RERUN="1"; .venv\Scripts\python.exe -m nbconvert --to notebook --e
 
 Close other GPU programs first: the largest runs use almost all of the 8 GB. After an aborted rerun, check `nvidia-smi` for a leftover Kumo process before resuming.
 
-All bag and blend files are committed in `submissions/`, so step 4 alone rebuilds
-the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`). On the RTX 3060 Ti
+All bag and blend files are committed in `submissions/`, so the two `blend.py` lines of step 4 alone rebuild
+the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`; if PowerShell blocks scripts, run
+`Set-ExecutionPolicy -Scope Process Bypass` first), or call `.venv\Scripts\python` instead of `python`. On the RTX 3060 Ti
 a v3.5 bag takes about 3.5 minutes at 8,000 context rows and 5 to 8 at 12,000; a
 Kumo run takes 2 to 3 (about 32 at 31k rows). Runs save each chunk of test rows and
 resume if stopped. Saved bags are keyed by version, tag and bag number only, so use
@@ -140,8 +196,11 @@ $r = @(0..9 | ForEach-Object { "kumo_recent18_s$_.csv:0.06818" }) + "kumo_recent
 $a = @(0..9 | ForEach-Object { "kumo_all12k_s$_.csv:0.02273" }) + "kumo_allfull_s0.csv:0.02273"
 python src/blend.py kumo22_blend.csv @r @a
 python src/blend.py blend_tabpfn_kumo22_55.csv blend_tabpfn_recent75_12k.csv:0.45 kumo22_blend.csv:0.55
-.venv\Scripts\kaggle competitions submit -c bt-4012-competition-2026 -f submissions/blend_tabpfn_kumo22_55.csv -m "describe the change"
 ```
+
+Submitting is optional and not needed to check the result. The `kaggle` command does not read `.env`: export the token in the
+shell first (`$env:KAGGLE_API_TOKEN="KGAT_..."`, or save it to `~/.kaggle/access_token`), then run
+`.venv\Scripts\kaggle competitions submit -c bt-4012-competition-2026 -f submissions/blend_tabpfn_kumo22_55.csv -m "describe the change"`.
 
 The Kumo part uses all 22 runs from step 3. The first Kumo blend (0.97162) used
 seeds 0–4 only (12 runs) at weight .25. Only the .55 file is kept.
@@ -228,6 +287,7 @@ src/train.py validation.py experiment.py   xgboost training, time-aware folds, w
 src/model_tuned.py       tuned xgboost, the earlier model of record (0.95521)
 reports/experiments.csv  one row per submission, offline score against leaderboard
 reports/progress.md      what has been tried, what worked, what did not
+reports/validation/      the notebook's section 5 predictions (time-based holdouts), computed on the GPU
 submissions/             the 29 prediction files of the final model (index,target); *.csv.parts/ are untracked Kumo chunks
 data/  cache/  .env  .venv/  .venv-fm/    gitignored (cache/ also holds saved TabPFN bags)
 ```

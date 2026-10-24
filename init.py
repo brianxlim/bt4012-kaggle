@@ -1,16 +1,20 @@
 """One-time setup: fetch the competition data into this repo and build the cache.
 
-Run this once after cloning:
+Run this once after cloning, with the repo's virtual environment:
 
-    python init.py
+    .venv\\Scripts\\python init.py        (macOS/Linux: .venv/bin/python init.py)
 
-This writes the four CSVs into ./data.
+This writes the four CSVs into ./data. If they are already there, nothing is
+downloaded and no token is needed.
 
-Needs a Kaggle API token in .env (never committed):
+The download needs a Kaggle account that has joined the competition, and an
+API token in .env (never committed):
 
     KAGGLE_API_TOKEN=KGAT_...
 
-Get one from https://www.kaggle.com/settings -> API -> Create New Token.
+An exported KAGGLE_API_TOKEN or a token in ~/.kaggle works too. Get one from
+https://www.kaggle.com/settings -> API -> Create New Token. Without a token,
+download the four CSVs from the competition's Data tab into data/ instead.
 """
 
 import os
@@ -34,22 +38,24 @@ EXPECTED = {
 
 def load_env() -> None:
     """Read .env into the environment. The kaggle package authenticates on
-    import, so this has to happen before that import."""
+    import, so this has to happen before that import. A missing .env is fine
+    when the token is already exported or saved in ~/.kaggle."""
     path = ROOT / ".env"
-    if not path.exists():
+    if path.exists():
+        for line in path.read_text(encoding="utf-8-sig").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+    saved = [Path.home() / ".kaggle" / name for name in ("access_token", "access_token.txt", "kaggle.json")]
+    if not os.environ.get("KAGGLE_API_TOKEN") and not any(p.exists() for p in saved):
         sys.exit(
-            f"No {path} found.\n"
-            "Create it with a single line:\n\n"
+            "No Kaggle token found in .env, the environment or ~/.kaggle.\n"
+            f"Create {path} with a single line:\n\n"
             "    KAGGLE_API_TOKEN=KGAT_your_token_here\n\n"
-            "Token from https://www.kaggle.com/settings -> API -> Create New Token."
+            "Token from https://www.kaggle.com/settings -> API -> Create New Token.\n"
+            f"Or download the four CSVs from https://www.kaggle.com/competitions/{COMPETITION}/data into data/."
         )
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip().strip("'\""))
-    if not os.environ.get("KAGGLE_API_TOKEN"):
-        sys.exit("KAGGLE_API_TOKEN is missing from .env")
 
 
 def download() -> None:
@@ -59,7 +65,11 @@ def download() -> None:
     api = KaggleApi()
     api.authenticate()
     print(f"downloading {COMPETITION} into {DATA.relative_to(ROOT)}/ ...")
-    api.competition_download_files(COMPETITION, path=str(DATA), quiet=False)
+    try:
+        api.competition_download_files(COMPETITION, path=str(DATA), quiet=False)
+    except Exception as err:  # most often: the account has not joined the competition
+        sys.exit(f"download failed: {err}\nJoin the competition and accept its rules at "
+                 f"https://www.kaggle.com/competitions/{COMPETITION}/rules, check the token, then run again.")
 
     for archive in DATA.glob("*.zip"):
         print(f"unzipping {archive.name}")
@@ -99,16 +109,16 @@ def build_cache() -> None:
 
 
 def main() -> None:
-    load_env()
     if verify():
         print("data already present, skipping download")
     else:
+        load_env()  # only a download needs the token
         download()
         print("\nverifying:")
         if not verify():
             sys.exit("download incomplete — delete data/ and run again")
     build_cache()
-    print(f"\nready. next: python src/model_tuned.py")
+    print("\nready. next: run e1122376.ipynb (README, Running the notebook)")
 
 
 if __name__ == "__main__":

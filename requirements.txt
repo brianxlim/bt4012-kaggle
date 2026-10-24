@@ -1,9 +1,11 @@
-# Main environment (.venv): the versions installed for the final runs, Python 3.11.
+# Main environment (.venv): the versions installed for the final runs. Requires Python 3.11: these pins do not
+# install on 3.10 or older (scipy, kaggle) or on 3.13 or newer (no torch, numpy or pandas wheels).
 # e1122376.ipynb and the scripts in src/ run here. Kumo Tabular runs in a second environment, see requirements-fm.txt.
 #
-# torch: the PyPI wheel for Windows is CPU-only. The final runs used the CUDA 12.4 build (2.5.1+cu124), installed
-# system-wide and reused with `python -m venv .venv --system-site-packages`; install it first from
-# https://download.pytorch.org/whl/cu124 if it is not there, or pip will pull the CPU wheel.
+# torch: the default notebook run needs no GPU, and the plain PyPI wheel is enough (CPU-only on Windows and macOS).
+# The final GPU runs used the CUDA 12.4 build (2.5.1+cu124), installed system-wide and reused with
+# `python -m venv .venv --system-site-packages`; install it first from https://download.pytorch.org/whl/cu124 for GPU work.
+# Linux without a GPU: install torch==2.5.1 from https://download.pytorch.org/whl/cpu first, or pip pulls the CUDA build.
 torch==2.5.1
 numpy==1.26.4
 pandas==2.2.2
@@ -16,7 +18,7 @@ lightgbm==4.7.0
 catboost==1.2.10
 pyarrow==16.1.0
 kaggle==2.2.4
-# Running the notebook (jupyter nbconvert --execute)
+# Running the notebook (python -m nbconvert --execute, with this environment's python)
 jupyter==1.0.0
 nbconvert==7.2.7
 nbformat==5.7.1

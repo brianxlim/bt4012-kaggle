@@ -779,7 +779,9 @@ took ~18 minutes on 4 CPU cores (§20) now take a few minutes.
 
 The pinned `requirements.txt` does not install on Python 3.11: `numpy==2.5.3`
 needs a newer Python. Everything from 2026-10-21 on ran in the unpinned
-environments above.
+environments above. (Later note, 2026-10-24: `requirements.txt` now pins the
+versions of these environments, numpy 1.26.4 among them, and installs on a clean
+Python 3.11 venv; `pip check` passes.)
 
 **Weights and licences.** TabPFN v3, v2.6 and v2.5 weights need a one-time
 licence acceptance at `ux.priorlabs.ai/account/licenses`. v3.5 worked with the

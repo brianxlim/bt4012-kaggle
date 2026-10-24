@@ -10,4 +10,6 @@ catboost_info/
 logs/
 .claude/
 submissions/*.parts/
+reports/validation/*.csv
+reports/validation/*.parts/
 

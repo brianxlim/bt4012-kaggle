@@ -1,4 +1,4 @@
-"""The model of record. Leaderboard 0.95521.
+"""The earlier model of record (leaderboard 0.95521); the final model is in e1122376.ipynb.
 
 Tuned xgboost on the raw 165 features, labelled rows only.
 
