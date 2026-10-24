@@ -63,3 +63,6 @@ run_at,name,auc,stderr,worst_day,n_features,rounds,lb_public,notes
 2026-10-23T14:38:24,blend_r75_e8full6,,,,165.0,,0.96694,best-blend recipe rebuilt with 8 TabPFN estimators per bag instead of 2
 2026-10-23T14:39:57,blend_r75_drop6full,,,,165.0,,0.96402,best-blend recipe rebuilt without feat_100/101/103/136/137/139 (train-vs-test AUC > 0.9)
 2026-10-23T14:41:22,blend_r75_kumo25,,,,165.0,,0.97162,best TabPFN blend .75 + NVIDIA Kumo Tabular large .25 (12 runs: days-18+ 8k x5 + 14k, all-days 12k x5 + 31k); kumo spearman 0.86 vs best; 2nd place
+2026-10-24T00:03:19,blend_tabpfn_kumo22_40,,,,165.0,,0.9728,best TabPFN blend .60 + Kumo Tabular .40 (22 runs: days-18+ 8k x10 + 14k .75; all-days 12k x10 + 31k .25)
+2026-10-24T00:04:23,blend_tabpfn_kumo22_55,,,,165.0,,0.97357,best TabPFN blend .45 + Kumo Tabular .55; 3rd place
+2026-10-24T03:23:00,blend_tabpfn_kumo22_33,,,,165.0,,0.97229,best TabPFN blend .67 + Kumo Tabular .33

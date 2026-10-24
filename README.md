@@ -3,8 +3,10 @@
 Kaggle competition [`bt-4012-competition-2026`](https://www.kaggle.com/competitions/bt-4012-competition-2026).
 Predict which Bitcoin transactions are illicit, scored by ROC AUC.
 
-**Model of record:** a TabPFN v3.5 blend (.75) plus NVIDIA Kumo Tabular (.25),
-`submissions/blend_r75_kumo25.csv`. Public score **0.97162**: 2nd when submitted
+**Model of record:** a TabPFN v3.5 blend (.45) plus NVIDIA Kumo Tabular (.55),
+`submissions/blend_tabpfn_kumo22_55.csv`. Public score **0.97357**, 3rd on the
+last day (1st 0.97582, 2nd 0.97446). The first Kumo blend, TabPFN .75 + Kumo .25
+(`submissions/blend_r75_kumo25.csv`), scored **0.97162**: 2nd when submitted
 on 2026-10-23, 3rd that evening (2nd 0.97190, leader 0.97446). The competition
 closes 2026-10-24 15:55 UTC.
 
@@ -99,9 +101,9 @@ python src/blend.py blend_tabpfn_recent75_12k.csv tabpfn_all_bags0-5.csv:0.167 t
 ```powershell
 cd src/fm
 $py = "..\..\.venv-fm\Scripts\python.exe"
-foreach ($s in 0..4) { & $py run_kumo.py 18 8000 $s "..\..\submissions\kumo_recent18_s${s}.csv" cuda }
+foreach ($s in 0..9) { & $py run_kumo.py 18 8000 $s "..\..\submissions\kumo_recent18_s${s}.csv" cuda }
 & $py run_kumo.py 18 14380 0 ..\..\submissions\kumo_recent18full_s0.csv cuda
-foreach ($s in 0..4) { & $py run_kumo.py 1 12000 $s "..\..\submissions\kumo_all12k_s${s}.csv" cuda }
+foreach ($s in 0..9) { & $py run_kumo.py 1 12000 $s "..\..\submissions\kumo_all12k_s${s}.csv" cuda }
 & $py run_kumo.py 1 31235 0 ..\..\submissions\kumo_allfull_s0.csv cuda
 cd ..\..
 ```
@@ -112,17 +114,24 @@ with a different context or seed under the same output name.
 **4. Kumo blend, final blend, submit** (repo root)
 
 ```powershell
-python src/blend.py kumo_blend.csv `
-  kumo_recent18_s0.csv:0.125 kumo_recent18_s1.csv:0.125 kumo_recent18_s2.csv:0.125 `
-  kumo_recent18_s3.csv:0.125 kumo_recent18_s4.csv:0.125 kumo_recent18full_s0.csv:0.125 `
-  kumo_all12k_s0.csv:0.04167 kumo_all12k_s1.csv:0.04167 kumo_all12k_s2.csv:0.04167 `
-  kumo_all12k_s3.csv:0.04167 kumo_all12k_s4.csv:0.04167 kumo_allfull_s0.csv:0.04167
-python src/blend.py blend_r75_kumo25.csv blend_tabpfn_recent75_12k.csv:0.75 kumo_blend.csv:0.25
-.venv\Scripts\kaggle competitions submit -c bt-4012-competition-2026 -f submissions/blend_r75_kumo25.csv -m "describe the change"
+$r = @(0..9 | ForEach-Object { "kumo_recent18_s$_.csv:0.06818" }) + "kumo_recent18full_s0.csv:0.06818"
+$a = @(0..9 | ForEach-Object { "kumo_all12k_s$_.csv:0.02273" }) + "kumo_allfull_s0.csv:0.02273"
+python src/blend.py kumo22_blend.csv @r @a
+python src/blend.py blend_tabpfn_kumo22_55.csv blend_tabpfn_recent75_12k.csv:0.45 kumo22_blend.csv:0.55
+.venv\Scripts\kaggle competitions submit -c bt-4012-competition-2026 -f submissions/blend_tabpfn_kumo22_55.csv -m "describe the change"
 ```
 
-**Three submissions per day**, up to two final selections. Selected on 2026-10-23:
-`blend_r75_kumo25.csv` and `blend_tabpfn_recent75_12k.csv`.
+The Kumo part uses all 22 runs from step 3. The first Kumo blend (0.97162) used
+seeds 0–4 only, as `kumo_blend.csv` at weight .25.
+
+| Kumo weight | File | Public score |
+|---|---|---|
+| .25 | `blend_r75_kumo25.csv` (12 runs) | 0.97162 |
+| .33 | `blend_tabpfn_kumo22_33.csv` | 0.97229 |
+| .40 | `blend_tabpfn_kumo22_40.csv` | 0.97280 |
+| .55 | `blend_tabpfn_kumo22_55.csv` | **0.97357** |
+
+**Three submissions per day**, up to two final selections.
 
 ---
 

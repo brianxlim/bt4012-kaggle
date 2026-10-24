@@ -3,38 +3,38 @@
 BT4012 Kaggle competition `bt-4012-competition-2026` — detecting illicit Bitcoin
 transactions in the Elliptic dataset, scored by ROC AUC.
 
-**Standing: 3rd place, public score 0.97162** (evening of 2026-10-23; leader
-0.97446, 2nd 0.97190). 67 submissions. Model of record: TabPFN blend .75 +
-NVIDIA Kumo Tabular .25. The xgboost model below was 1st on 2026-09-17 at 0.95521.
-Last updated 2026-10-23.
+**Standing: 3rd place, public score 0.97357** (2026-10-24, final day; leader
+0.97582, 2nd 0.97446). 70 submissions. Model of record: TabPFN blend .45 +
+NVIDIA Kumo Tabular .55. The xgboost model below was 1st on 2026-09-17 at 0.95521.
+Last updated 2026-10-24.
 
 ---
 
 ## 1. Result
 
-Standing on 2026-10-23, public leaderboard:
+Standing on 2026-10-24, public leaderboard:
 
 | | Public score |
 |---|---|
-| Leader | 0.97446 |
-| 2nd place | 0.97190 |
-| **This model (TabPFN + Kumo blend)** | **0.97162** |
+| Leader | 0.97582 |
+| 2nd place | 0.97446 |
+| **This model (TabPFN .45 + Kumo .55)** | **0.97357** |
+| TabPFN .75 + Kumo .25 (2026-10-23) | 0.97162 |
 | Previous model of record (TabPFN-only blend) | 0.96825 |
 | Earlier model of record (xgboost, 2026-09-17) | 0.95521 |
 | Organisers' baseline | 0.92119 |
 
-The model of record is `submissions/blend_r75_kumo25.csv`, a rank-average of two
-parts. Both are pretrained tabular models used in-context, with no training on
-this data: they read a sample of labelled rows and score the test rows.
+The model of record is `submissions/blend_tabpfn_kumo22_55.csv`, a rank-average
+of two parts. Both are pretrained tabular models used in-context, with no
+training on this data: they read a sample of labelled rows and score the test rows.
 
 | Part | Weight | What it is |
 |---|---|---|
-| Best TabPFN blend (`blend_tabpfn_recent75_12k.csv`) | .75 | TabPFN v3.5 bags: all-days 8k × 6 bags .167, all-days 12k .083, days-18+ 8k × 3 bags .40, days-18+ 12k .35 |
-| Kumo component (`kumo_blend.csv`) | .25 | NVIDIA Kumo Tabular large, 12 runs: days-18+ 8k × 5 and 14k, all-days 12k × 5 and 31k |
+| Best TabPFN blend (`blend_tabpfn_recent75_12k.csv`) | .45 | TabPFN v3.5 bags: all-days 8k × 6 bags .167, all-days 12k .083, days-18+ 8k × 3 bags .40, days-18+ 12k .35 |
+| Kumo component (`kumo22_blend.csv`) | .55 | NVIDIA Kumo Tabular large, 22 runs: days-18+ 8k × 10 and 14k (.75), all-days 12k × 10 and 31k (.25) |
 
-It scored 0.97162, +0.0034 over the TabPFN-only blend. §27 has the Kumo result
-and §28 what is left. Final selections on Kaggle (set 2026-10-23):
-`blend_r75_kumo25.csv` and `blend_tabpfn_recent75_12k.csv`.
+It scored 0.97357, +0.0053 over the TabPFN-only blend. §27 has the first Kumo
+result, §29 the weight search on the last day.
 
 On 2026-09-17 the model of record was the xgboost model below, and it was 1st:
 
@@ -138,7 +138,10 @@ labelled rows; the only outside ingredient is the pretrained weights.
 | 64 | Best blend, days 43–49 pooled rank shifted −0.02 | — | 0.96805 | +0.0128 |
 | 65 | Best-blend recipe rebuilt with 8 TabPFN estimators per bag | — | 0.96694 | +0.0117 |
 | 66 | Best-blend recipe rebuilt without the six time-marker features | — | 0.96402 | +0.0088 |
-| 67 | **Best TabPFN blend .75 + NVIDIA Kumo Tabular .25** | — | **0.97162** | **+0.0164** |
+| 67 | Best TabPFN blend .75 + NVIDIA Kumo Tabular .25 | — | 0.97162 | +0.0164 |
+| 68 | Best TabPFN blend .60 + Kumo (22 runs) .40 | — | 0.97280 | +0.0176 |
+| 69 | **Best TabPFN blend .45 + Kumo (22 runs) .55** | — | **0.97357** | **+0.0184** |
+| 70 | Best TabPFN blend .67 + Kumo (22 runs) .33 | — | 0.97229 | +0.0171 |
 
 Of the first eight submissions, four improved the score. All four were changes to
 model *settings*. Every change to the feature set or the model family failed.
@@ -1034,8 +1037,8 @@ the TabPFN plateau. The plateau was a ceiling for one family, not for the task.
 
 ## 28. Where this could still go
 
-The deadline is 2026-10-24 15:55 UTC. Three submissions a day, two final
-selections, already set (§1): the Kumo blend and the TabPFN-only blend.
+Written on 2026-10-23; §29 has what happened. The deadline is 2026-10-24 15:55
+UTC. Three submissions a day, two final selections.
 
 - **Kumo weight.** Only .25 was tried. Going from 0 to .25 gained 0.0034, and
   nothing says the optimum is at .25. A .35 or .40 share costs no GPU time: both
@@ -1049,3 +1052,25 @@ selections, already set (§1): the Kumo blend and the TabPFN-only blend.
 
 All three are tuning around one result. Anything touching the feature set has
 no record of gaining.
+
+---
+
+## 29. 2026-10-24 — the Kumo weight, last day
+
+The Kumo component was rebuilt from 22 runs (10 seeds each at days-18+ 8k and
+all-days 12k, plus the two full-context runs; same .75 / .25 split). It ranks the
+test rows like the 12-run component (Spearman 0.9995), so the weight is the only
+real change. The day's three submissions searched the weight:
+
+| # | Kumo share | Public score | vs 0.96825 |
+|---|---|---|---|
+| 67 | .25 (12 runs, 2026-10-23) | 0.97162 | +0.0034 |
+| 70 | .33 | 0.97229 | +0.0040 |
+| 68 | .40 | 0.97280 | +0.0046 |
+| 69 | **.55** | **0.97357** | **+0.0053** |
+
+Every step up gained, so the optimum is at .55 or beyond; no submissions were
+left to look further. Kumo now carries more weight than TabPFN. The four points
+lie on one smooth rise, which makes it unlikely to be public-sample noise: each
+step is a small change to the same two parts. Standing at the end: 3rd, behind
+0.97582 and 0.97446.
