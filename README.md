@@ -85,9 +85,6 @@ $env:E1122376_RERUN="1"; .venv\Scripts\python.exe -m nbconvert --to notebook --e
 
 Close other GPU programs first: the largest runs use almost all of the 8 GB. After an aborted rerun, check `nvidia-smi` for a leftover Kumo process before resuming.
 
-**AI assistance.** This project, including the notebook, this README and `reports/progress.md`, was built with an AI coding assistant (Claude Code, by Anthropic).
-The assistant wrote and ran code and experiments and drafted the text.
-
 All bag and blend files are committed in `submissions/`, so step 4 alone rebuilds
 the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`). On the RTX 3060 Ti
 a v3.5 bag takes about 3.5 minutes at 8,000 context rows and 5 to 8 at 12,000; a
@@ -150,11 +147,11 @@ The Kumo part uses all 22 runs from step 3. The first Kumo blend (0.97162) used
 seeds 0–4 only (12 runs) at weight .25. Only the .55 file is kept.
 
 | Kumo weight | Kumo runs | Public score |
-|---|---|---|
-| .25 | 12 | 0.97162 |
-| .33 | 22 | 0.97229 |
-| .40 | 22 | 0.97280 |
-| .55 | 22 | **0.97357** |
+| ----------- | --------- | ------------ |
+| .25         | 12        | 0.97162      |
+| .33         | 22        | 0.97229      |
+| .40         | 22        | 0.97280      |
+| .55         | 22        | **0.97357**  |
 
 **Three submissions per day**, up to two final selections.
 
@@ -169,14 +166,14 @@ a first day on, plus seeded random licit rows up to the context size. Bags diffe
 in seed, first day and context size, and are rank-averaged. A TabPFN bag uses 2
 internal estimators, a Kumo run 8.
 
-| Part | Runs | Context rows | First day | Weight |
-|---|---|---|---|---|
-| TabPFN, all days | 6 bags | 8,000 | 1 | .167 |
-| TabPFN, all days | 1 bag | 12,000 | 1 | .083 |
-| TabPFN, days 18+ | 3 bags | 8,000 | 18 | .40 |
-| TabPFN, days 18+ | 1 bag | 12,000 | 18 | .35 |
-| Kumo, days 18+ | 10 seeds, plus 1 run | 8,000; 14,380 (all) | 18 | .06818 each (.75 in total) |
-| Kumo, all days | 10 seeds, plus 1 run | 12,000; 31,235 (all) | 1 | .02273 each (.25 in total) |
+| Part             | Runs                 | Context rows         | First day | Weight                     |
+| ---------------- | -------------------- | -------------------- | --------- | -------------------------- |
+| TabPFN, all days | 6 bags               | 8,000                | 1         | .167                       |
+| TabPFN, all days | 1 bag                | 12,000               | 1         | .083                       |
+| TabPFN, days 18+ | 3 bags               | 8,000                | 18        | .40                        |
+| TabPFN, days 18+ | 1 bag                | 12,000               | 18        | .35                        |
+| Kumo, days 18+   | 10 seeds, plus 1 run | 8,000; 14,380 (all)  | 18        | .06818 each (.75 in total) |
+| Kumo, all days   | 10 seeds, plus 1 run | 12,000; 31,235 (all) | 1         | .02273 each (.25 in total) |
 
 Weights are within the TabPFN blend and the Kumo blend; the final score is the
 TabPFN blend × .45 plus the Kumo blend × .55. Public score: tuned XGBoost 0.95521,
@@ -196,19 +193,19 @@ LimiX-2 was dropped (no test chunk finished in 20+ minutes). More in
 
 `src/model_tabpfn.py` environment variables, all optional:
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `TABPFN_CONTEXT` | 8000 | Context rows per bag; 99999 = all labelled rows from the first day |
-| `TABPFN_ESTIMATORS` | 2 | Internal ensemble size |
-| `TABPFN_CHUNK` | 2000 | Test rows per predict call |
-| `TABPFN_VERSION` | unset | `v2_5`, `v2_6`, `v3`, `v3_5` or `tabicl` (TabICLv2). Unset = package default (v3.5) and the old file names. Output: `tabpfn{version}_{tag}_bags{a}-{b}.csv`, e.g. `tabpfnv35_recent18_bags0-2.csv` |
-| `TABPFN_CKPT` | unset | A specific checkpoint file of that version |
-| `TABPFN_CACHED` | unset | `1` encodes the context once (`fit_with_cache`); runs out of memory at 14k context rows or more on 8 GB |
-| `TABPFN_DROP` | unset | Comma-separated features to leave out |
-| `TABPFN_CLIP` | unset | `1` clips test features to the bag's context range |
-| `TABICL_BATCH` | 2 | Batch size for TabICLv2 |
-| `TABPFN_DEVICE` | auto | `cuda`, `mps` or `cpu`; default is CUDA, then Apple MPS, then CPU |
-| `TABPFN_TOKEN` | `.env` | Prior Labs token |
+| Variable            | Default | Meaning                                                                                                                                                                                            |
+| ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TABPFN_CONTEXT`    | 8000    | Context rows per bag; 99999 = all labelled rows from the first day                                                                                                                                 |
+| `TABPFN_ESTIMATORS` | 2       | Internal ensemble size                                                                                                                                                                             |
+| `TABPFN_CHUNK`      | 2000    | Test rows per predict call                                                                                                                                                                         |
+| `TABPFN_VERSION`    | unset   | `v2_5`, `v2_6`, `v3`, `v3_5` or `tabicl` (TabICLv2). Unset = package default (v3.5) and the old file names. Output: `tabpfn{version}_{tag}_bags{a}-{b}.csv`, e.g. `tabpfnv35_recent18_bags0-2.csv` |
+| `TABPFN_CKPT`       | unset   | A specific checkpoint file of that version                                                                                                                                                         |
+| `TABPFN_CACHED`     | unset   | `1` encodes the context once (`fit_with_cache`); runs out of memory at 14k context rows or more on 8 GB                                                                                            |
+| `TABPFN_DROP`       | unset   | Comma-separated features to leave out                                                                                                                                                              |
+| `TABPFN_CLIP`       | unset   | `1` clips test features to the bag's context range                                                                                                                                                 |
+| `TABICL_BATCH`      | 2       | Batch size for TabICLv2                                                                                                                                                                            |
+| `TABPFN_DEVICE`     | auto    | `cuda`, `mps` or `cpu`; default is CUDA, then Apple MPS, then CPU                                                                                                                                  |
+| `TABPFN_TOKEN`      | `.env`  | Prior Labs token                                                                                                                                                                                   |
 
 `src/fm/run_kumo.py`: `KUMO_SIZE` (`large`), `KUMO_ESTIMATORS` (8), `FM_CHUNK` (1000
 test rows per call), `FM_REPO` (repo root), `FM_MAX_ILLICIT_FRAC` (0.5, cap on the
