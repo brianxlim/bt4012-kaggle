@@ -14,7 +14,8 @@ scale_pos_weight on its own +0.0046. Together, +0.0090 offline over 3 folds x
 10 seeds, and +0.0052 on the leaderboard.
 
 The tree-shape settings on top of that came from a 24-configuration random
-search over whole combinations (src/tune_v2.py). Every configuration that beat
+search over whole combinations (src/tune_v2.py, now only in the git history at
+d93e014; results in reports/progress.md). Every configuration that beat
 the previous model shared subsample=1.0 and colsample_bytree=0.7, so the ridge
 was tested directly rather than taking the single best sample: +0.0110 on seeds
 0-9 and +0.0115 on seeds 10-19, which the search never saw.

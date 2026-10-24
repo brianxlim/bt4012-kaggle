@@ -5,10 +5,14 @@ Predict which Bitcoin transactions are illicit, scored by ROC AUC.
 
 **Model of record:** a TabPFN v3.5 blend (.45) plus NVIDIA Kumo Tabular (.55),
 `submissions/blend_tabpfn_kumo22_55.csv`. Public score **0.97357**, 3rd on the
-last day (1st 0.97582, 2nd 0.97446). The first Kumo blend, TabPFN .75 + Kumo .25
-(`submissions/blend_r75_kumo25.csv`), scored **0.97162**: 2nd when submitted
-on 2026-10-23, 3rd that evening (2nd 0.97190, leader 0.97446). The competition
-closes 2026-10-24 15:55 UTC.
+last day (1st 0.97582, 2nd 0.97446). The two final selections on Kaggle are this
+blend and the TabPFN blend alone, `submissions/blend_tabpfn_recent75_12k.csv`
+(0.96825). The first Kumo blend, TabPFN .75 + Kumo .25, scored **0.97162**: 2nd
+when submitted on 2026-10-23, 3rd that evening (2nd 0.97190, leader 0.97446).
+
+`submissions/` keeps only the 29 files of the final model. Earlier submission
+files and the experiment scripts that did not reach it were removed on 2026-10-24;
+they are in the git history at commit `d93e014`.
 
 ---
 
@@ -70,8 +74,8 @@ runs the validation on the GPU (about 10 minutes the first time, cached afterwar
 and needs no GPU), then **re-blends the committed per-run prediction files** and checks the three blends against the committed ones exactly.
 That exact match checks the blending arithmetic and the file format, not the models. `$env:E1122376_RERUN="1"` regenerates every TabPFN bag
 and Kumo run from `train.csv` and `test.csv` (about 2 hours; the 31k-row Kumo run alone takes about 32 minutes). It is not bit-identical to the
-committed files, so it reports rank correlations. The complete rerun ran end to end on 24 October 2026 in 121 minutes (executed copy:
-`reports/e1122376_rerun.ipynb`): all 22 Kumo runs matched the committed files byte for byte, the four TabPFN files agreed at Spearman
+committed files, so it reports rank correlations. The complete rerun ran end to end on 24 October 2026 in 121 minutes:
+all 22 Kumo runs matched the committed files byte for byte, the four TabPFN files agreed at Spearman
 0.989–0.999, and the final submission at Spearman 0.9996.
 A full rerun needs `--ExecutePreprocessor.timeout=-1` (the timeout is per cell) and should write to its own file so it does not overwrite the notebook's saved outputs:
 
@@ -87,7 +91,7 @@ The assistant wrote and ran code and experiments and drafted the text.
 All bag and blend files are committed in `submissions/`, so step 4 alone rebuilds
 the blend. Activate `.venv` first (`.venv\Scripts\Activate.ps1`). On the RTX 3060 Ti
 a v3.5 bag takes about 3.5 minutes at 8,000 context rows and 5 to 8 at 12,000; a
-Kumo run takes 2 to 3 (about 28 at 31k rows). Runs save each chunk of test rows and
+Kumo run takes 2 to 3 (about 32 at 31k rows). Runs save each chunk of test rows and
 resume if stopped. Saved bags are keyed by version, tag and bag number only, so use
 a new tag when you change any other setting.
 
@@ -143,14 +147,14 @@ python src/blend.py blend_tabpfn_kumo22_55.csv blend_tabpfn_recent75_12k.csv:0.4
 ```
 
 The Kumo part uses all 22 runs from step 3. The first Kumo blend (0.97162) used
-seeds 0–4 only, as `kumo_blend.csv` at weight .25.
+seeds 0–4 only (12 runs) at weight .25. Only the .55 file is kept.
 
-| Kumo weight | File | Public score |
+| Kumo weight | Kumo runs | Public score |
 |---|---|---|
-| .25 | `blend_r75_kumo25.csv` (12 runs) | 0.97162 |
-| .33 | `blend_tabpfn_kumo22_33.csv` | 0.97229 |
-| .40 | `blend_tabpfn_kumo22_40.csv` | 0.97280 |
-| .55 | `blend_tabpfn_kumo22_55.csv` | **0.97357** |
+| .25 | 12 | 0.97162 |
+| .33 | 22 | 0.97229 |
+| .40 | 22 | 0.97280 |
+| .55 | 22 | **0.97357** |
 
 **Three submissions per day**, up to two final selections.
 
@@ -183,7 +187,7 @@ but the averaged Kumo ranks test rows differently from the TabPFN blend (0.867).
 
 Tried against the 0.96825 blend, no gain (public score): TabICLv2 at .20 / .35
 0.96799 / 0.96629; three TabPFN v3 checkpoints at .25 0.96701; days-43+ block
-offset −0.05 / +0.05 / −0.02 (`src/blockshift.py`) 0.96714 / 0.95519 / 0.96805;
+offset −0.05 / +0.05 / −0.02 0.96714 / 0.95519 / 0.96805;
 8 estimators per bag 0.96694; leaving out the six time-marker features 0.96402.
 LimiX-2 was dropped (no test chunk finished in 20+ minutes). More in
 [`reports/progress.md`](reports/progress.md).
@@ -222,18 +226,12 @@ src/data.py              loading and parquet caching
 src/model_tabpfn.py      TabPFN and TabICLv2 bags (TabPFN part of the model of record)
 src/fm/run_kumo.py       Kumo Tabular runner (Kumo part of the model of record)
 src/fm/fm_common.py      context sampling and chunked prediction for src/fm
-src/fm/run_limix.py      LimiX-2 runner (dropped, too slow on 8 GB)
 src/blend.py             rank-average prediction files with weights
-src/blockshift.py        shift the pooled rank of test rows from a given day on
 src/train.py validation.py experiment.py   xgboost training, time-aware folds, writing submissions
 src/model_tuned.py       tuned xgboost, the earlier model of record (0.95521)
-src/tune.py tune_v2.py   xgboost settings searches (tune_v2.py needs Python 3.12 f-string syntax)
-src/model_*.py gnn.py    other experiments, each described in its docstring
-src/dayrank.py  src/graph_labelled.py    post-processing and graph-feature experiments
 reports/experiments.csv  one row per submission, offline score against leaderboard
 reports/progress.md      what has been tried, what worked, what did not
-reports/tuning.csv       the settings sweep (tuning_v2.csv: the second search)
-submissions/             prediction files (index,target); *.csv.parts/ are untracked Kumo chunks
+submissions/             the 29 prediction files of the final model (index,target); *.csv.parts/ are untracked Kumo chunks
 data/  cache/  .env  .venv/  .venv-fm/    gitignored (cache/ also holds saved TabPFN bags)
 ```
 

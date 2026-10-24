@@ -1,4 +1,4 @@
-"""Shared data loading / chunking helpers for the foundation-model runners (run_kumo.py, run_limix.py).
+"""Shared data loading / chunking helpers for the foundation-model runner (run_kumo.py).
 
 Run them with .venv-fm (Kumo needs a newer torch than the main venv). Reads the repo's parquet cache read-only.
 

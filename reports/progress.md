@@ -8,6 +8,11 @@ transactions in the Elliptic dataset, scored by ROC AUC.
 NVIDIA Kumo Tabular .55. The xgboost model below was 1st on 2026-09-17 at 0.95521.
 Last updated 2026-10-24.
 
+This is the running log, kept as written. On 2026-10-24 the repo was trimmed to
+the final model: `submissions/` keeps its 29 files and `src/` keeps nine scripts.
+Other submission files, scripts (`src/model_alt.py`, `src/tune_v2.py`, ...) and
+`reports/tuning*.csv` named below are in the git history at commit `d93e014`.
+
 ---
 
 ## 1. Result
