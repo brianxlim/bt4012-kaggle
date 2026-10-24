@@ -69,8 +69,10 @@ Do not use `jupyter nbconvert` or `python -m jupyter`: they start the system Pyt
 runs the validation on the GPU (about 10 minutes the first time, cached afterwards; `$env:E1122376_SKIP_VALIDATION="1"` skips it
 and needs no GPU), then **re-blends the committed per-run prediction files** and checks the three blends against the committed ones exactly.
 That exact match checks the blending arithmetic and the file format, not the models. `$env:E1122376_RERUN="1"` regenerates every TabPFN bag
-and Kumo run from `train.csv` and `test.csv` (about 2.5 hours; the 31k-row Kumo run alone takes about 28 minutes). It is not bit-identical to the
-committed files, so it reports rank correlations. Its building blocks were checked at full size, but the complete rerun was not executed end to end.
+and Kumo run from `train.csv` and `test.csv` (about 2 hours; the 31k-row Kumo run alone takes about 32 minutes). It is not bit-identical to the
+committed files, so it reports rank correlations. The complete rerun ran end to end on 24 October 2026 in 121 minutes (executed copy:
+`reports/e1122376_rerun.ipynb`): all 22 Kumo runs matched the committed files byte for byte, the four TabPFN files agreed at Spearman
+0.989–0.999, and the final submission at Spearman 0.9996.
 A full rerun needs `--ExecutePreprocessor.timeout=-1` (the timeout is per cell) and should write to its own file so it does not overwrite the notebook's saved outputs:
 
 ```powershell
