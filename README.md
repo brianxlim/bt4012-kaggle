@@ -161,10 +161,16 @@ Remove-Item Env:TABPFN_CONTEXT
 The blend uses file names from earlier versions of the script. A fresh run writes
 `tabpfn_bags0-5.csv`, `tabpfn_ctx12k_bags0-0.csv` and `tabpfn_recent18ctx12k_bags0-0.csv`
 instead of `tabpfn_all_bags0-5.csv`, `tabpfn_ctx12k_bag0.csv` and
-`tabpfn_recent18ctx12k_bag0.csv` (`recent18` is unchanged), and does not overwrite
-the committed files. Rename them or pass the new names in step 2. The committed
+`tabpfn_recent18ctx12k_bag0.csv`, so those three do not overwrite the committed files.
+Rename them or pass the new names in step 2. The committed
 bags are already v3.5: a GPU rebuild of the days-18+ 8k bags correlates 0.997
 (Spearman) with them.
+
+**These scripts write into `submissions/`.** The `recent18` bags, the Kumo runs of step 3 and the
+blends of steps 2 and 4 replace committed files of the same name, and new TabPFN bags are not bit-identical
+to the committed ones, so the notebook's exact-match check can fail afterwards. `git restore submissions/` brings the
+committed files back. To recompute everything without touching them, use the notebook's full rerun
+(`E1122376_RERUN=1`), which writes to `rebuild/rerun/`.
 
 **2. Best TabPFN blend** (public 0.96825)
 
